@@ -5,19 +5,27 @@ Exposes:
     POST /api/analyze          run an analysis
     GET  /api/insights         aggregated insights for the dashboard
     GET  /api/history          recent analysis history
+    GET  /api/escalations      recent high-risk escalation events
     GET  /api/health           liveness check
 """
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from dotenv import load_dotenv
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+load_dotenv()
+
 from .modules.data_access import (
+    get_sender_profile,
     init_db,
     insights_summary,
+    recent_escalations,
     recent_history,
     save_analysis,
+    update_sender_profile,
 )
+from .modules.escalation_engine import handle_escalation, should_escalate
 from .modules.pipeline import run_analysis
 from .modules.schemas import AnalysisRequest, AnalysisResult
 
@@ -48,13 +56,20 @@ def health() -> dict:
 
 
 @app.post("/api/analyze", response_model=AnalysisResult)
-def analyze(req: AnalysisRequest) -> AnalysisResult:
+def analyze(req: AnalysisRequest, background_tasks: BackgroundTasks) -> AnalysisResult:
+    sender_profile = get_sender_profile(req.sender_id) if req.sender_id else None
     try:
-        result = run_analysis(req)
+        result = run_analysis(req, sender_profile)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     # Persist a privacy-minimal record for aggregates
     save_analysis(req.content, result)
+    if req.sender_id:
+        update_sender_profile(req.sender_id, result)
+    if should_escalate(result):
+        # Runs after the response is sent -- a slow/failing webhook never
+        # delays the verdict the user is waiting on.
+        background_tasks.add_task(handle_escalation, req.content, result)
     return result
 
 
@@ -67,3 +82,9 @@ def insights() -> dict:
 def history(limit: int = 20) -> list:
     limit = max(1, min(limit, 100))
     return recent_history(limit)
+
+
+@app.get("/api/escalations")
+def escalations(limit: int = 20) -> list:
+    limit = max(1, min(limit, 100))
+    return recent_escalations(limit)

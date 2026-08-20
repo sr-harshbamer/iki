@@ -65,3 +65,13 @@ export interface HistoryItem {
   preview: string;
   created_at: string;
 }
+
+export interface EscalationItem {
+  mode: string;
+  risk_level: string;
+  risk_score: number;
+  threat_category: string;
+  preview: string;
+  notified_webhook: number;
+  created_at: string;
+}

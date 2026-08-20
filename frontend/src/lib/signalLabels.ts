@@ -34,6 +34,9 @@ export const SIGNAL_LABELS: Record<string, string> = {
   off_channel_contact: "Off-channel contact push",
   free_email_recruiter: "Free-email recruiter",
   no_verifiable_company: "No verifiable company",
+  // Sender anomaly
+  sender_anomaly_score_spike: "Unusual risk spike for this sender",
+  sender_anomaly_new_pattern: "New pattern for this sender",
 };
 
 export function signalLabel(id: string): string {

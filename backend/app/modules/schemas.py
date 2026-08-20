@@ -57,6 +57,10 @@ class Signal(BaseModel):
 class AnalysisRequest(BaseModel):
     mode: AnalysisMode
     content: str = Field(..., min_length=1, max_length=8000)
+    # Optional, user-chosen tag (e.g. a phone number or handle) used only to
+    # build a communication baseline for anomaly detection. Not required --
+    # omitting it keeps analysis fully anonymous as before.
+    sender_id: Optional[str] = Field(default=None, max_length=120)
 
 
 class HighlightedPhrase(BaseModel):

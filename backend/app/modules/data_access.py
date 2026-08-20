@@ -12,7 +12,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 from .schemas import AnalysisResult
 
@@ -35,6 +35,26 @@ def init_db() -> None:
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_analyses_created_at ON analyses(created_at);
+
+        CREATE TABLE IF NOT EXISTS sender_profiles (
+            sender_id TEXT PRIMARY KEY,
+            message_count INTEGER NOT NULL DEFAULT 0,
+            avg_risk_score REAL NOT NULL DEFAULT 0,
+            signal_ids TEXT NOT NULL DEFAULT '[]',  -- JSON list, union of all signal ids ever seen
+            last_seen TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS escalations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mode TEXT NOT NULL,
+            risk_level TEXT NOT NULL,
+            risk_score INTEGER NOT NULL,
+            threat_category TEXT NOT NULL,
+            preview TEXT NOT NULL,
+            notified_webhook INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_escalations_created_at ON escalations(created_at);
         """)
 
 
@@ -130,3 +150,70 @@ def insights_summary() -> dict:
         "top_signals": [{"signal_id": s, "count": c} for s, c in top_signals],
         "top_phrases": [{"phrase": p, "count": c} for p, c in top_phrases],
     }
+
+
+def get_sender_profile(sender_id: str) -> Optional[dict]:
+    """Return this sender's communication baseline, or None if unseen."""
+    with _conn() as cx:
+        row = cx.execute(
+            "SELECT sender_id, message_count, avg_risk_score, signal_ids, last_seen "
+            "FROM sender_profiles WHERE sender_id = ?",
+            (sender_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def update_sender_profile(sender_id: str, result: AnalysisResult) -> None:
+    """Fold this analysis into the sender's rolling baseline."""
+    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    existing = get_sender_profile(sender_id)
+    new_signal_ids = {s.id for s in result.signals}
+
+    with _conn() as cx:
+        if existing:
+            count = existing["message_count"] + 1
+            avg = (
+                (existing["avg_risk_score"] * existing["message_count"]) + result.risk_score
+            ) / count
+            all_signal_ids = set(json.loads(existing["signal_ids"])) | new_signal_ids
+            cx.execute(
+                """UPDATE sender_profiles
+                   SET message_count = ?, avg_risk_score = ?, signal_ids = ?, last_seen = ?
+                   WHERE sender_id = ?""",
+                (count, avg, json.dumps(sorted(all_signal_ids)), now, sender_id),
+            )
+        else:
+            cx.execute(
+                """INSERT INTO sender_profiles
+                   (sender_id, message_count, avg_risk_score, signal_ids, last_seen)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (sender_id, 1, float(result.risk_score), json.dumps(sorted(new_signal_ids)), now),
+            )
+
+
+def log_escalation(content_preview: str, result: AnalysisResult, notified_webhook: bool) -> None:
+    with _conn() as cx:
+        cx.execute(
+            """INSERT INTO escalations
+               (mode, risk_level, risk_score, threat_category, preview, notified_webhook, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                result.mode.value,
+                result.risk_level.value,
+                result.risk_score,
+                result.threat_category.value,
+                content_preview[:240],
+                1 if notified_webhook else 0,
+                datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            ),
+        )
+
+
+def recent_escalations(limit: int = 20) -> List[dict]:
+    with _conn() as cx:
+        rows = cx.execute(
+            "SELECT mode, risk_level, risk_score, threat_category, preview, "
+            "notified_webhook, created_at FROM escalations ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return [dict(r) for r in rows]

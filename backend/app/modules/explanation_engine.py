@@ -98,6 +98,11 @@ WHY_FLAGGED_TEMPLATES = {
     "no_verifiable_company":
         "No company website or verifiable domain is provided, so the employer "
         "cannot be independently confirmed.",
+    # Sender anomaly (Phase 2)
+    "sender_anomaly_score_spike":
+        "{ev} That is a sharp deviation from how this sender normally communicates.",
+    "sender_anomaly_new_pattern":
+        "{ev} This sender has not used this kind of language in any prior message.",
 }
 
 
@@ -173,6 +178,12 @@ WHY_NOT_PROCEED = {
         "company they claim to represent.",
     "no_verifiable_company":
         "Without an official site or domain, the employer cannot be confirmed to exist.",
+    "sender_anomaly_score_spike":
+        "A sudden jump in risk from a normally low-risk sender often means the "
+        "account or number has been compromised or is being spoofed.",
+    "sender_anomaly_new_pattern":
+        "A pattern this sender has never used before may mean you are no "
+        "longer talking to the same person or account.",
 }
 
 
@@ -187,12 +198,22 @@ def _format_evidence(evidence: List[str]) -> str:
     return ", ".join(parts)
 
 
+_GENERIC_WHY_NOT_PROCEED = (
+    "This was flagged by deeper semantic review, not just keyword matching -- "
+    "treat it with the same caution as an explicit red flag."
+)
+
+
 def build_why_flagged(signals: List[Signal]) -> List[str]:
     out: List[str] = []
     for sig in signals:
         template = WHY_FLAGGED_TEMPLATES.get(sig.id)
         if template:
             out.append(template.format(ev=_format_evidence(sig.evidence)))
+        elif sig.evidence:
+            out.append(f"{sig.label}: {_format_evidence(sig.evidence)}")
+        else:
+            out.append(sig.label)
     return out
 
 
@@ -200,8 +221,8 @@ def build_why_not_proceed(signals: List[Signal]) -> List[str]:
     out: List[str] = []
     seen: set[str] = set()
     for sig in signals:
-        text = WHY_NOT_PROCEED.get(sig.id)
-        if text and text not in seen:
+        text = WHY_NOT_PROCEED.get(sig.id) or _GENERIC_WHY_NOT_PROCEED
+        if text not in seen:
             seen.add(text)
             out.append(text)
     return out

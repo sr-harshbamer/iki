@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export default function AnalyzePage() {
   const [mode, setMode] = useState<AnalysisMode>("message");
   const [content, setContent] = useState("");
+  const [senderId, setSenderId] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [analyzedContent, setAnalyzedContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,7 @@ export default function AnalyzePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await analyze(mode, trimmed);
+      const res = await analyze(mode, trimmed, senderId);
       setResult(res);
       setAnalyzedContent(trimmed);
       // Scroll to result on the next frame
@@ -83,6 +84,28 @@ export default function AnalyzePage() {
               onChange={setContent}
               disabled={loading}
             />
+
+            <div className="mt-5 space-y-1.5">
+              <label className="text-sm font-medium text-ink-800">
+                Sender tag <span className="font-normal text-ink-400">(optional)</span>
+              </label>
+              <input
+                type="text"
+                spellCheck={false}
+                autoComplete="off"
+                className="input"
+                placeholder="e.g. a phone number or handle, so Veridra can learn what's normal for this sender"
+                value={senderId}
+                onChange={(e) => setSenderId(e.target.value)}
+                disabled={loading}
+                maxLength={120}
+              />
+              <p className="text-xs text-ink-500">
+                Leave blank for a one-off, anonymous check. Tagging a sender lets
+                Veridra flag messages that are unusual compared to that sender's
+                own history — nothing is required to fill this in.
+              </p>
+            </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-ink-500">

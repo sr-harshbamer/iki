@@ -1,13 +1,19 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { fetchHistory, fetchInsights } from "@/lib/api";
+import { fetchEscalations, fetchHistory, fetchInsights } from "@/lib/api";
 import { modeLabel, riskTheme } from "@/lib/risk";
 import { signalLabel } from "@/lib/signalLabels";
-import type { HistoryItem, InsightsSummary, RiskLevel } from "@/lib/types";
+import type {
+  EscalationItem,
+  HistoryItem,
+  InsightsSummary,
+  RiskLevel,
+} from "@/lib/types";
 import {
   Activity,
   AlertTriangle,
+  BellRing,
   Database,
   Info,
   Shield,
@@ -49,16 +55,22 @@ const LEVEL_ORDER: RiskLevel[] = [
 export default function InsightsPage() {
   const [insights, setInsights] = useState<InsightsSummary | null>(null);
   const [history, setHistory] = useState<HistoryItem[] | null>(null);
+  const [escalations, setEscalations] = useState<EscalationItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [i, h] = await Promise.all([fetchInsights(), fetchHistory(12)]);
+        const [i, h, esc] = await Promise.all([
+          fetchInsights(),
+          fetchHistory(12),
+          fetchEscalations(10),
+        ]);
         if (!cancelled) {
           setInsights(i);
           setHistory(h);
+          setEscalations(esc);
         }
       } catch (e) {
         if (!cancelled) {
@@ -260,6 +272,9 @@ export default function InsightsPage() {
             </div>
           )}
 
+          {/* Escalations */}
+          <EscalationsCard escalations={escalations} />
+
           {/* Recent history */}
           <div className="card p-6">
             <SectionHeader
@@ -412,6 +427,59 @@ function SectionHeader({
         <h3 className="text-base font-semibold text-ink-900">{title}</h3>
         <p className="text-xs text-ink-500">{subtitle}</p>
       </div>
+    </div>
+  );
+}
+
+function EscalationsCard({
+  escalations,
+}: {
+  escalations: EscalationItem[] | null;
+}) {
+  return (
+    <div className="card p-6">
+      <SectionHeader
+        icon={<BellRing className="h-4 w-4" />}
+        title="Escalations"
+        subtitle="Likely Scam / High Risk verdicts flagged for a trusted contact"
+      />
+      {!escalations ? (
+        <EmptyBlock />
+      ) : escalations.length === 0 ? (
+        <p className="mt-4 text-sm text-ink-500">
+          No escalations yet. A message scored Likely Scam or High Risk will
+          appear here automatically.
+        </p>
+      ) : (
+        <ul className="mt-4 space-y-2">
+          {escalations.map((e, i) => {
+            const theme = riskTheme(e.risk_level as RiskLevel);
+            return (
+              <li
+                key={i}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-200 bg-white p-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className={cn("chip border shrink-0", theme.chip)}>
+                    {e.risk_level}
+                  </span>
+                  <span className="truncate text-sm text-ink-700">
+                    {e.threat_category} · {e.preview}
+                  </span>
+                </div>
+                <div className="flex shrink-0 items-center gap-3 text-xs text-ink-500">
+                  <span>
+                    {e.notified_webhook
+                      ? "Trusted contact notified"
+                      : "Logged (no webhook configured)"}
+                  </span>
+                  <span>{relativeTime(e.created_at)}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
