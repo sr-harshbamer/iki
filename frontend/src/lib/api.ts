@@ -5,6 +5,7 @@ import type {
   HistoryItem,
   ImageAnalysisResponse,
   InsightsSummary,
+  SenderLookupResult,
 } from "./types";
 
 // The Next.js rewrite in next.config.js proxies /api/* to the FastAPI backend.
@@ -54,6 +55,14 @@ export async function analyzeImage(
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`Analysis failed: ${text}`);
   }
+  return res.json();
+}
+
+export async function lookupSender(senderId: string): Promise<SenderLookupResult> {
+  const res = await fetch(`${BASE}/api/sender-lookup?sender_id=${encodeURIComponent(senderId)}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Lookup failed");
   return res.json();
 }
 

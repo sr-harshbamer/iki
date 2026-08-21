@@ -4,6 +4,7 @@ SuSagi — FastAPI entry point.
 Exposes:
     POST /api/analyze          run an analysis
     POST /api/analyze-image    run an analysis on an uploaded screenshot
+    GET  /api/sender-lookup    check a sender's history before engaging
     GET  /api/insights         aggregated insights for the dashboard
     GET  /api/history          recent analysis history
     GET  /api/escalations      recent high-risk escalation events
@@ -11,6 +12,7 @@ Exposes:
 """
 from __future__ import annotations
 
+import json
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -30,7 +32,13 @@ from .modules.data_access import (
 )
 from .modules.escalation_engine import handle_escalation, should_escalate
 from .modules.pipeline import run_analysis, run_image_analysis
-from .modules.schemas import AnalysisRequest, AnalysisResult, ImageAnalysisResponse
+from .modules.risk_scoring import score_to_level
+from .modules.schemas import (
+    AnalysisRequest,
+    AnalysisResult,
+    ImageAnalysisResponse,
+    SenderLookupResult,
+)
 
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
@@ -112,6 +120,35 @@ def analyze_image(
         background_tasks.add_task(handle_escalation, preview, result)
 
     return ImageAnalysisResponse(result=result, extracted_text=extracted_text)
+
+
+@app.get("/api/sender-lookup", response_model=SenderLookupResult)
+def sender_lookup(sender_id: str) -> SenderLookupResult:
+    """
+    Check a number or handle's history BEFORE opening whatever it just
+    sent you -- the one thing a paste-and-check tool structurally can't
+    do on its own. Built entirely from SuSagi's own accumulated
+    sender_profiles (real prior checks against this tag), never a
+    purchased or scraped reputation database.
+    """
+    sender_id = sender_id.strip()
+    if not sender_id:
+        raise HTTPException(status_code=400, detail="sender_id is required")
+
+    profile = get_sender_profile(sender_id)
+    if not profile:
+        return SenderLookupResult(found=False, sender_id=sender_id)
+
+    avg_score = round(profile["avg_risk_score"])
+    return SenderLookupResult(
+        found=True,
+        sender_id=sender_id,
+        message_count=profile["message_count"],
+        avg_risk_score=avg_score,
+        risk_level=score_to_level(avg_score),
+        signal_ids=json.loads(profile["signal_ids"]),
+        last_seen=profile["last_seen"],
+    )
 
 
 @app.get("/api/insights")

@@ -45,7 +45,7 @@ def score_signals(signals: List[Signal]) -> Tuple[int, RiskLevel, Tuple[int, int
     if any(s.severity == Severity.CRITICAL for s in signals):
         score = max(score, CRITICAL_FLOOR)
 
-    level = _score_to_level(score)
+    level = score_to_level(score)
 
     # Confidence widens when there are few signals or only low-severity ones
     spread = 8 if len([s for s in signals if s.severity in (Severity.HIGH, Severity.CRITICAL)]) >= 2 else 14
@@ -54,7 +54,7 @@ def score_signals(signals: List[Signal]) -> Tuple[int, RiskLevel, Tuple[int, int
     return score, level, (low, high)
 
 
-def _score_to_level(score: int) -> RiskLevel:
+def score_to_level(score: int) -> RiskLevel:
     if score < 15:
         return RiskLevel.SAFE
     if score < 35:

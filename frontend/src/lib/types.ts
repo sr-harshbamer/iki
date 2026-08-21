@@ -88,6 +88,16 @@ export interface HistoryItem {
   created_at: string;
 }
 
+export interface SenderLookupResult {
+  found: boolean;
+  sender_id: string;
+  message_count: number;
+  avg_risk_score: number;
+  risk_level: RiskLevel | null;
+  signal_ids: string[];
+  last_seen: string | null;
+}
+
 export interface EscalationItem {
   mode: string;
   risk_level: string;

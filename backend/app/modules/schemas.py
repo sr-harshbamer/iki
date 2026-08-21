@@ -115,6 +115,20 @@ class AnalysisResult(BaseModel):
     analyzed_at: str              # ISO timestamp
 
 
+class SenderLookupResult(BaseModel):
+    """Response for /api/sender-lookup -- a Truecaller-style "check before
+    you answer" query. Built entirely from SuSagi's own accumulated
+    sender_profiles data (real checks other people have run), never a
+    fabricated or purchased reputation database."""
+    found: bool
+    sender_id: str
+    message_count: int = 0
+    avg_risk_score: int = 0
+    risk_level: Optional[RiskLevel] = None
+    signal_ids: List[str] = Field(default_factory=list)
+    last_seen: Optional[str] = None
+
+
 class ImageAnalysisResponse(BaseModel):
     """Response for /api/analyze-image. Includes the vision-extracted text
     alongside the usual result, since there's no original text input for the

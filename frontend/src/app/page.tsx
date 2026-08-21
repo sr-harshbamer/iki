@@ -11,6 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { AttackSimulator } from "@/components/AttackSimulator";
+import { SenderLookup } from "@/components/SenderLookup";
 
 export default function LandingPage() {
   return (
@@ -54,8 +55,25 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ──────────────── Attack Simulator ──────────────── */}
+      {/* ──────────────── Check before you answer ──────────────── */}
       <section className="bg-white py-16">
+        <div className="container-wide max-w-3xl">
+          <span className="eyebrow">Before you even open it</span>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
+            Most checkers only work after the fact. This one doesn&apos;t have to.
+          </h2>
+          <p className="mt-3 text-ink-600">
+            If you&apos;ve tagged a sender before, check their history first —
+            before you open, reply, or act on whatever they just sent.
+          </p>
+          <div className="mt-6">
+            <SenderLookup />
+          </div>
+        </div>
+      </section>
+
+      {/* ──────────────── Attack Simulator ──────────────── */}
+      <section className="bg-ink-50 py-16">
         <div className="container-wide max-w-3xl">
           <span className="eyebrow">See it work, instantly</span>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
