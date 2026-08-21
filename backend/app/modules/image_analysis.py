@@ -41,6 +41,7 @@ import numpy as np
 from .data_access import get_ai_cache, set_ai_cache
 from .link_analysis import analyze_link
 from .schemas import Severity, Signal, ThreatCategory
+from .upi_analysis import analyze_upi_payload
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_VISION_MODEL = os.environ.get("GEMINI_VISION_MODEL", "gemini-3.6-flash")
@@ -172,25 +173,31 @@ def analyze_image_with_llm(image_bytes: bytes, mime_type: str) -> Tuple[str, Lis
 
 
 _URL_RE = re.compile(r"^https?://", re.IGNORECASE)
+_UPI_RE = re.compile(r"^upi://pay", re.IGNORECASE)
 
 
-def decode_qr_signals(image_bytes: bytes) -> Tuple[Optional[str], List[Signal], ThreatCategory]:
-    """Fully offline QR decode via OpenCV. If the QR payload looks like a
-    URL, runs it through the real link analyzer instead of guessing from
-    appearance. Returns (decoded_value, signals, category)."""
+def decode_qr_signals(
+    image_bytes: bytes,
+) -> Tuple[Optional[str], List[Signal], ThreatCategory, Optional[str]]:
+    """Fully offline QR decode via OpenCV. Routes the payload to the real
+    link analyzer (for a URL) or the UPI payment parser (for a upi://pay
+    deep link) instead of guessing from appearance. Returns
+    (decoded_value, signals, category, payee_vpa) -- payee_vpa is set only
+    for payment QR codes, so the caller can track that specific payee's
+    reputation across scans."""
     arr = np.frombuffer(image_bytes, dtype=np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if img is None:
-        return None, [], ThreatCategory.NONE
+        return None, [], ThreatCategory.NONE, None
 
     detector = cv2.QRCodeDetector()
     try:
         data, _points, _straight = detector.detectAndDecode(img)
     except cv2.error:
-        return None, [], ThreatCategory.NONE
+        return None, [], ThreatCategory.NONE, None
 
     if not data:
-        return None, [], ThreatCategory.NONE
+        return None, [], ThreatCategory.NONE, None
 
     signals: List[Signal] = [Signal(
         id="qr_code_detected",
@@ -201,9 +208,14 @@ def decode_qr_signals(image_bytes: bytes) -> Tuple[Optional[str], List[Signal], 
     )]
 
     category = ThreatCategory.NONE
-    if _URL_RE.match(data):
+    payee_vpa: Optional[str] = None
+    if _UPI_RE.match(data):
+        upi_signals, upi_category, payee_vpa = analyze_upi_payload(data)
+        signals.extend(upi_signals)
+        category = upi_category
+    elif _URL_RE.match(data):
         link_signals, link_category = analyze_link(data)
         signals.extend(link_signals)
         category = link_category
 
-    return data, signals, category
+    return data, signals, category, payee_vpa

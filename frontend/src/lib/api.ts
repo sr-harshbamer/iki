@@ -58,6 +58,25 @@ export async function analyzeImage(
   return res.json();
 }
 
+export async function analyzeQr(
+  content: string,
+  senderId?: string,
+): Promise<ImageAnalysisResponse> {
+  const res = await fetch(`${BASE}/api/analyze-qr`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content,
+      sender_id: senderId?.trim() || undefined,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`Analysis failed: ${text}`);
+  }
+  return res.json();
+}
+
 export async function lookupSender(senderId: string): Promise<SenderLookupResult> {
   const res = await fetch(`${BASE}/api/sender-lookup?sender_id=${encodeURIComponent(senderId)}`, {
     cache: "no-store",

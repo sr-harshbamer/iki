@@ -40,6 +40,11 @@ export const SIGNAL_LABELS: Record<string, string> = {
   sender_anomaly_new_pattern: "New pattern for this sender",
   // Image / screenshot intelligence
   qr_code_detected: "QR code detected",
+  // UPI payment QR
+  upi_missing_payee_id: "No payee specified",
+  upi_malformed_payee_id: "Malformed payee ID",
+  upi_missing_payee_name: "Unverified payee name",
+  upi_prefilled_large_amount: "Large pre-filled amount",
 };
 
 export function signalLabel(id: string): string {

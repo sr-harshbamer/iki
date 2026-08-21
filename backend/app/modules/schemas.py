@@ -129,6 +129,14 @@ class SenderLookupResult(BaseModel):
     last_seen: Optional[str] = None
 
 
+class QrScanRequest(BaseModel):
+    """A QR code already decoded client-side (browser BarcodeDetector during
+    a live camera scan) -- no image upload or OCR needed, just the raw
+    payload to classify and score."""
+    content: str = Field(..., min_length=1, max_length=4000)
+    sender_id: Optional[str] = Field(default=None, max_length=120)
+
+
 class ImageAnalysisResponse(BaseModel):
     """Response for /api/analyze-image. Includes the vision-extracted text
     alongside the usual result, since there's no original text input for the

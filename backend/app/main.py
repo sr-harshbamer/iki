@@ -18,7 +18,7 @@ from __future__ import annotations
 import asyncio
 import json
 import random
-from typing import Optional
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from fastapi import (
@@ -45,6 +45,7 @@ from .modules.data_access import (
 )
 from .modules.decision_risk import assess_decision_risk
 from .modules.escalation_engine import ESCALATION_LEVELS, handle_escalation, should_escalate
+from .modules.link_analysis import analyze_link
 from .modules.llm_analysis import analyze_with_llm
 from .modules.message_analysis import analyze_message
 from .modules.pipeline import _build_result, run_analysis, run_image_analysis
@@ -54,9 +55,14 @@ from .modules.schemas import (
     AnalysisRequest,
     AnalysisResult,
     ImageAnalysisResponse,
+    QrScanRequest,
     SenderLookupResult,
+    Signal,
+    Severity,
+    ThreatCategory,
 )
 from .modules.scam_scorer import ConvState
+from .modules.upi_analysis import analyze_upi_payload
 
 # Load Vosk model globally
 try:
@@ -137,16 +143,69 @@ def analyze_image(
         raise HTTPException(status_code=400, detail="Image too large (5MB max).")
 
     sender_profile = get_sender_profile(sender_id) if sender_id else None
-    result, extracted_text = run_image_analysis(image_bytes, file.content_type, sender_profile)
+    result, extracted_text, payee_vpa = run_image_analysis(
+        image_bytes, file.content_type, sender_profile
+    )
 
     preview = extracted_text or "(image with no extracted text)"
     save_analysis(preview, result)
     if sender_id:
         update_sender_profile(sender_id, result)
+    if payee_vpa:
+        # Accumulates this payee's reputation for future scans -- checkable
+        # right now via GET /api/sender-lookup?sender_id=upi:<vpa>, the same
+        # "check before you answer" feature already built for message senders.
+        update_sender_profile(f"upi:{payee_vpa}", result)
     if should_escalate(result):
         background_tasks.add_task(handle_escalation, preview, result)
 
     return ImageAnalysisResponse(result=result, extracted_text=extracted_text)
+
+
+@app.post("/api/analyze-qr", response_model=ImageAnalysisResponse)
+def analyze_qr(req: QrScanRequest, background_tasks: BackgroundTasks) -> ImageAnalysisResponse:
+    """
+    Live camera QR scan. The browser's BarcodeDetector already decoded the
+    code to plain text before this call, so there's no image upload or OCR
+    step here -- just classify the payload (UPI payment vs URL vs unknown)
+    and run it through the same scorer/reputation path as every other mode.
+    """
+    content = req.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="Empty QR content.")
+
+    signals: List[Signal] = [Signal(
+        id="qr_code_detected",
+        label="QR code scanned",
+        severity=Severity.MEDIUM,
+        evidence=[content],
+        category_hint=None,
+    )]
+    category = ThreatCategory.NONE
+    payee_vpa: Optional[str] = None
+
+    lowered = content.lower()
+    if lowered.startswith("upi://pay"):
+        upi_signals, upi_category, payee_vpa = analyze_upi_payload(content)
+        signals.extend(upi_signals)
+        category = upi_category
+    elif lowered.startswith(("http://", "https://")):
+        link_signals, link_category = analyze_link(content)
+        signals.extend(link_signals)
+        category = link_category
+
+    sender_profile = get_sender_profile(req.sender_id) if req.sender_id else None
+    result = _build_result(AnalysisMode.IMAGE, category, signals, sender_profile)
+
+    save_analysis(content, result)
+    if req.sender_id:
+        update_sender_profile(req.sender_id, result)
+    if payee_vpa:
+        update_sender_profile(f"upi:{payee_vpa}", result)
+    if should_escalate(result):
+        background_tasks.add_task(handle_escalation, content, result)
+
+    return ImageAnalysisResponse(result=result, extracted_text=content)
 
 
 @app.get("/api/sender-lookup", response_model=SenderLookupResult)
