@@ -10,6 +10,13 @@ import type {
 // The Next.js rewrite in next.config.js proxies /api/* to the FastAPI backend.
 const BASE = "";
 
+// Image analysis can take 20-60s (vision model + JSON schema constraint).
+// Next.js's dev-server rewrite proxy times out well before that and resets
+// the connection ("socket hang up"), so this one call goes straight to the
+// backend instead of through the /api/* rewrite.
+const DIRECT_API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export async function analyze(
   mode: AnalysisMode,
   content: string,
@@ -39,7 +46,7 @@ export async function analyzeImage(
   form.append("file", file);
   if (senderId?.trim()) form.append("sender_id", senderId.trim());
 
-  const res = await fetch(`${BASE}/api/analyze-image`, {
+  const res = await fetch(`${DIRECT_API_BASE}/api/analyze-image`, {
     method: "POST",
     body: form,
   });
