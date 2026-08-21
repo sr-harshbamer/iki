@@ -127,12 +127,19 @@ def analyze_image(
         raise HTTPException(status_code=400, detail="Image too large (5MB max).")
 
     sender_profile = get_sender_profile(sender_id) if sender_id else None
-    result, extracted_text = run_image_analysis(image_bytes, file.content_type, sender_profile)
+    result, extracted_text, payee_vpa = run_image_analysis(
+        image_bytes, file.content_type, sender_profile
+    )
 
     preview = extracted_text or "(image with no extracted text)"
     save_analysis(preview, result)
     if sender_id:
         update_sender_profile(sender_id, result)
+    if payee_vpa:
+        # Accumulates this payee's reputation for future scans -- checkable
+        # right now via GET /api/sender-lookup?sender_id=upi:<vpa>, the same
+        # "check before you answer" feature already built for message senders.
+        update_sender_profile(f"upi:{payee_vpa}", result)
     if should_escalate(result):
         background_tasks.add_task(handle_escalation, preview, result)
 

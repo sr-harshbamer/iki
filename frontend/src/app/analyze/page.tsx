@@ -3,6 +3,7 @@
 import { ContentInput } from "@/components/ContentInput";
 import { ImageInput } from "@/components/ImageInput";
 import { ModeTabs } from "@/components/ModeTabs";
+import { QrStopScreen } from "@/components/QrStopScreen";
 import { RiskVerdictPanel } from "@/components/RiskVerdictPanel";
 import { analyze, analyzeImage } from "@/lib/api";
 import { ATTACK_SCENARIOS, type AttackScenario } from "@/lib/scenarios";
@@ -30,6 +31,7 @@ function AnalyzePageContent() {
   const [analyzedContent, setAnalyzedContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [qrStopAcknowledged, setQrStopAcknowledged] = useState(false);
   const resultRef = useRef<HTMLDivElement | null>(null);
 
   // Clear result when the user switches modes — a result from a different mode
@@ -38,6 +40,19 @@ function AnalyzePageContent() {
     setResult(null);
     setError(null);
   }, [mode]);
+
+  // A dangerous payment/link QR gets the Truecaller-style full-screen stop --
+  // not a card sitting quietly among the others. Reset the acknowledgment
+  // every time a new result comes in so a fresh scan is never pre-dismissed.
+  const isDangerousQr =
+    !!result &&
+    result.risk_level !== "Safe" &&
+    result.risk_level !== "Low Risk" &&
+    result.signals.some((s) => s.id === "qr_code_detected");
+
+  useEffect(() => {
+    setQrStopAcknowledged(false);
+  }, [result]);
 
   const runScenario = useCallback(async (scenario: AttackScenario) => {
     setLoading(true);
@@ -144,6 +159,13 @@ function AnalyzePageContent() {
 
   return (
     <>
+      {isDangerousQr && result && !qrStopAcknowledged && (
+        <QrStopScreen
+          result={result}
+          onAcknowledge={() => setQrStopAcknowledged(true)}
+        />
+      )}
+
       {/* ── Header ───────────────────────────────────────────────── */}
       <section className="border-b border-ink-200 bg-white">
         <div className="container-wide py-12 sm:py-16">

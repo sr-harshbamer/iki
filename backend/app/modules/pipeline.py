@@ -59,18 +59,21 @@ def run_image_analysis(
     image_bytes: bytes,
     mime_type: str,
     sender_profile: Optional[dict] = None,
-) -> Tuple[AnalysisResult, str]:
+) -> Tuple[AnalysisResult, str, Optional[str]]:
     """
     Screenshot intelligence: vision-extract text + visual cues from the
     image, run the extracted text through the exact same pipeline as a
-    pasted message, decode any QR code into a real link-analysis check, and
-    merge everything into one result.
+    pasted message, decode any QR code into a real link-analysis (URL) or
+    UPI payment check, and merge everything into one result.
 
-    Returns (result, extracted_text) -- the caller shows extracted_text to
-    the user as the "analyzed content" so they can see what SuSagi read.
+    Returns (result, extracted_text, payee_vpa) -- extracted_text is shown
+    to the user as the "analyzed content"; payee_vpa is set only for a
+    payment QR code, so the caller can persist that specific payee's
+    reputation for future scans (see /api/sender-lookup, which already
+    exposes it under the "upi:<vpa>" tag with no new UI needed).
     """
     extracted_text, visual_signals = analyze_image_with_llm(image_bytes, mime_type)
-    qr_value, qr_signals, qr_category = decode_qr_signals(image_bytes)
+    qr_value, qr_signals, qr_category, payee_vpa = decode_qr_signals(image_bytes)
 
     text_signals: List[Signal] = []
     category = ThreatCategory.NONE
@@ -95,7 +98,7 @@ def run_image_analysis(
     result = _build_result(
         AnalysisMode.IMAGE, category, signals, sender_profile, empty_reason, forecast
     )
-    return result, extracted_text
+    return result, extracted_text, payee_vpa
 
 
 def _build_result(

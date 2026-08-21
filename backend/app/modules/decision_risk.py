@@ -26,6 +26,8 @@ from .schemas import DecisionRisk, DecisionRiskLevel, Signal
 IRREVERSIBLE_SIGNAL_IDS = {
     "credential_request", "financial_fraud_wording", "url_plus_pressure",
     "upfront_fee", "premature_pii", "sender_anomaly_score_spike",
+    "upi_missing_payee_id", "upi_malformed_payee_id",
+    "upi_missing_payee_name", "upi_prefilled_large_amount",
 }
 
 # Signals that raise the stakes but don't by themselves make the action
