@@ -2,17 +2,20 @@
 
 import { cn } from "@/lib/cn";
 import { modeLabel, riskTheme, severityTheme } from "@/lib/risk";
-import type { AnalysisResult } from "@/lib/types";
+import type { AnalysisResult, DecisionRiskLevel } from "@/lib/types";
 import {
   AlertOctagon,
   CheckCircle2,
+  Gauge,
   ListChecks,
+  Radar,
   ShieldAlert,
   ShieldCheck,
   ShieldX,
   SlashSquare,
   Tag,
   TriangleAlert,
+  Undo2,
 } from "lucide-react";
 import { HighlightedContent } from "./HighlightedContent";
 
@@ -122,6 +125,16 @@ export function RiskVerdictPanel({
       {/* ── Signals (detected red flags) ─────────────────────────── */}
       {result.signals.length > 0 && (
         <SignalList result={result} />
+      )}
+
+      {/* ── Decision risk + attack forecast ──────────────────────── */}
+      {!isSafe && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <DecisionRiskCard decisionRisk={result.decision_risk} />
+          {result.attack_forecast && (
+            <AttackForecastCard forecast={result.attack_forecast} />
+          )}
+        </div>
       )}
 
       {/* ── The four explanation layers ──────────────────────────── */}
@@ -335,6 +348,143 @@ function SignalList({ result }: { result: AnalysisResult }) {
           );
         })}
       </ul>
+    </div>
+  );
+}
+
+function decisionRiskTheme(level: DecisionRiskLevel) {
+  switch (level) {
+    case "Low":
+      return { bg: "bg-emerald-50", ring: "ring-emerald-200", text: "text-emerald-800", chip: "bg-emerald-50 text-emerald-800 border-emerald-200" };
+    case "Moderate":
+      return { bg: "bg-amber-50", ring: "ring-amber-200", text: "text-amber-900", chip: "bg-amber-50 text-amber-900 border-amber-200" };
+    case "High":
+      return { bg: "bg-red-50", ring: "ring-red-200", text: "text-red-800", chip: "bg-red-50 text-red-800 border-red-200" };
+    case "Critical":
+    default:
+      return { bg: "bg-red-100", ring: "ring-red-300", text: "text-red-900", chip: "bg-red-100 text-red-900 border-red-300" };
+  }
+}
+
+/**
+ * Answers a different question than the risk score: not "is this a scam"
+ * but "how dangerous is the specific decision being pressured here" --
+ * combining scam likelihood with what's at stake and how hard it would be
+ * to undo. A high-probability scam asking you to just read an email is
+ * lower decision-risk than a lower-probability one asking you to wire money.
+ */
+function DecisionRiskCard({
+  decisionRisk,
+}: {
+  decisionRisk: AnalysisResult["decision_risk"];
+}) {
+  const theme = decisionRiskTheme(decisionRisk.level);
+  return (
+    <div className={cn("card overflow-hidden ring-1", theme.bg, theme.ring)}>
+      <div className="p-6 sm:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-900 text-white">
+              <Gauge className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-base font-semibold text-ink-900">Decision risk</h3>
+              <p className="text-xs text-ink-500">
+                How dangerous is the specific action being pressured, not just the message
+              </p>
+            </div>
+          </div>
+          <span className={cn("chip border shrink-0", theme.chip)}>
+            {decisionRisk.level}
+          </span>
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-xl border border-ink-200 bg-white p-3">
+            <div className="text-xl font-semibold tabular-nums text-ink-900">
+              {decisionRisk.scam_probability}%
+            </div>
+            <div className="mt-1 text-[11px] uppercase tracking-wide text-ink-500">
+              Scam probability
+            </div>
+          </div>
+          <div className="rounded-xl border border-ink-200 bg-white p-3">
+            <div className="text-xl font-semibold text-ink-900">
+              {decisionRisk.potential_consequence}
+            </div>
+            <div className="mt-1 text-[11px] uppercase tracking-wide text-ink-500">
+              Potential loss
+            </div>
+          </div>
+          <div className="rounded-xl border border-ink-200 bg-white p-3">
+            <div className="flex items-center justify-center gap-1 text-xl font-semibold tabular-nums text-ink-900">
+              <Undo2 className="h-3.5 w-3.5 text-ink-400" />
+              {decisionRisk.reversibility_score}
+            </div>
+            <div className="mt-1 text-[11px] uppercase tracking-wide text-ink-500">
+              Reversibility
+            </div>
+          </div>
+        </div>
+        {decisionRisk.reversibility_score <= 30 && (
+          <p className={cn("mt-4 text-xs leading-relaxed", theme.text)}>
+            This action would be difficult to reverse once taken — money sent
+            or credentials shared here are very unlikely to be recoverable.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * What a matching scam pattern typically escalates to next, so the user
+ * recognizes the next message as a continuation of the same attack instead
+ * of a fresh, unrelated request. A forecast, never presented as certain.
+ */
+function AttackForecastCard({
+  forecast,
+}: {
+  forecast: NonNullable<AnalysisResult["attack_forecast"]>;
+}) {
+  return (
+    <div className="card overflow-hidden bg-ink-900 text-white">
+      <div className="p-6 sm:p-7">
+        <div className="flex items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10">
+            <Radar className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-base font-semibold text-white">Attack forecast</h3>
+            <p className="text-xs text-white/60">What the attacker may do next</p>
+          </div>
+        </div>
+        <div className="mt-5">
+          <div className="text-[11px] uppercase tracking-wide text-white/50">
+            Likely next step
+          </div>
+          <p className="mt-1.5 text-lg font-semibold leading-snug text-white">
+            {forecast.predicted_next_step}
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="chip border-white/20 bg-white/10 text-white">
+              {forecast.confidence}% confidence
+            </span>
+          </div>
+        </div>
+        <div className="mt-5 border-t border-white/10 pt-4">
+          <div className="text-[11px] uppercase tracking-wide text-white/50">
+            Potential outcome
+          </div>
+          <p className="mt-1.5 text-sm leading-relaxed text-white/80">
+            {forecast.potential_outcome}
+          </p>
+        </div>
+        <p className="mt-5 text-[11px] leading-relaxed text-white/40">
+          A forecast based on common patterns for this kind of scam — not a
+          guarantee of what will happen.
+        </p>
+      </div>
     </div>
   );
 }

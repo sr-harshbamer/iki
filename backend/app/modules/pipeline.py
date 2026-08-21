@@ -11,6 +11,7 @@ from typing import List, Optional, Tuple
 
 from .anomaly_detection import detect_sender_anomaly
 from .block_report_guidance import build_block_report_guidance
+from .decision_risk import assess_decision_risk
 from .explanation_engine import (
     build_highlighted_phrases,
     build_why_flagged,
@@ -27,6 +28,7 @@ from .schemas import (
     AnalysisMode,
     AnalysisRequest,
     AnalysisResult,
+    AttackForecast,
     RiskLevel,
     Signal,
     ThreatCategory,
@@ -45,10 +47,12 @@ def run_analysis(req: AnalysisRequest, sender_profile: Optional[dict] = None) ->
 
     # Semantic LLM pass -- catches inconsistencies/tone that rules can't.
     # Skipped for link mode (a bare URL has no tone or logic to evaluate).
+    forecast: Optional[AttackForecast] = None
     if req.mode in (AnalysisMode.MESSAGE, AnalysisMode.JOB_OFFER):
-        signals = signals + analyze_with_llm(req.content, req.mode)
+        llm_signals, forecast = analyze_with_llm(req.content, req.mode)
+        signals = signals + llm_signals
 
-    return _build_result(req.mode, category, signals, sender_profile)
+    return _build_result(req.mode, category, signals, sender_profile, forecast=forecast)
 
 
 def run_image_analysis(
@@ -70,9 +74,11 @@ def run_image_analysis(
 
     text_signals: List[Signal] = []
     category = ThreatCategory.NONE
+    forecast: Optional[AttackForecast] = None
     if extracted_text:
         text_signals, category = analyze_message(extracted_text)
-        text_signals = text_signals + analyze_with_llm(extracted_text, AnalysisMode.MESSAGE)
+        llm_signals, forecast = analyze_with_llm(extracted_text, AnalysisMode.MESSAGE)
+        text_signals = text_signals + llm_signals
 
     if category == ThreatCategory.NONE:
         category = qr_category
@@ -86,7 +92,9 @@ def run_image_analysis(
             "configured yet -- ask the site operator to set GEMINI_API_KEY."
         )
 
-    result = _build_result(AnalysisMode.IMAGE, category, signals, sender_profile, empty_reason)
+    result = _build_result(
+        AnalysisMode.IMAGE, category, signals, sender_profile, empty_reason, forecast
+    )
     return result, extracted_text
 
 
@@ -96,6 +104,7 @@ def _build_result(
     signals: List[Signal],
     sender_profile: Optional[dict],
     empty_reason: Optional[str] = None,
+    forecast: Optional[AttackForecast] = None,
 ) -> AnalysisResult:
     score, level, (conf_low, conf_high) = score_signals(signals)
 
@@ -122,6 +131,8 @@ def _build_result(
             "expect this message or link, still verify the sender through an "
             "independent channel before acting."
         ]
+        # A forecast with nothing to base it on isn't a forecast -- it's a guess.
+        forecast = None
     else:
         why_flagged = build_why_flagged(signals)
         why_not_proceed = build_why_not_proceed(signals)
@@ -133,6 +144,7 @@ def _build_result(
     safe_actions = build_safe_actions(guidance_mode, category, signals)
     block_report = build_block_report_guidance(guidance_mode, category)
     highlights = build_highlighted_phrases(signals)
+    decision_risk = assess_decision_risk(signals, score)
 
     return AnalysisResult(
         mode=mode,
@@ -147,5 +159,7 @@ def _build_result(
         safe_actions=safe_actions,
         block_report_guidance=block_report,
         highlighted_phrases=highlights,
+        decision_risk=decision_risk,
+        attack_forecast=forecast,
         analyzed_at=datetime.utcnow().isoformat(timespec="seconds") + "Z",
     )

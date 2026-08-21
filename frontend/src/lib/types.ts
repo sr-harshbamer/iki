@@ -32,6 +32,21 @@ export interface HighlightedPhrase {
   reason: string;
 }
 
+export type DecisionRiskLevel = "Low" | "Moderate" | "High" | "Critical";
+
+export interface DecisionRisk {
+  scam_probability: number;
+  potential_consequence: "Low" | "Medium" | "High";
+  reversibility_score: number;
+  level: DecisionRiskLevel;
+}
+
+export interface AttackForecast {
+  predicted_next_step: string;
+  confidence: number;
+  potential_outcome: string;
+}
+
 export interface AnalysisResult {
   mode: AnalysisMode;
   risk_level: RiskLevel;
@@ -45,6 +60,8 @@ export interface AnalysisResult {
   safe_actions: string[];
   block_report_guidance: string[];
   highlighted_phrases: HighlightedPhrase[];
+  decision_risk: DecisionRisk;
+  attack_forecast: AttackForecast | null;
   analyzed_at: string;
 }
 

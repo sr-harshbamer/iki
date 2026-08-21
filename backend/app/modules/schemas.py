@@ -69,6 +69,33 @@ class HighlightedPhrase(BaseModel):
     reason: str
 
 
+class AttackForecast(BaseModel):
+    """What the attacker is likely to ask for next, based on which stage of
+    a known scam pattern the current content matches. A forecast, not a
+    guarantee -- always carries a confidence, never presented as certain."""
+    predicted_next_step: str
+    confidence: int                # 0-100
+    potential_outcome: str
+
+
+class DecisionRiskLevel(str, Enum):
+    LOW = "Low"
+    MODERATE = "Moderate"
+    HIGH = "High"
+    CRITICAL = "Critical"
+
+
+class DecisionRisk(BaseModel):
+    """Answers a different question than the risk score: not "is this a
+    scam" but "how dangerous is the specific decision being pressured
+    here" -- combining scam likelihood with what's actually at stake and
+    how hard it would be to undo if acted on."""
+    scam_probability: int          # 0-100, mirrors risk_score
+    potential_consequence: str     # "Low" | "Medium" | "High"
+    reversibility_score: int       # 0-100, LOWER = harder to undo if acted on
+    level: DecisionRiskLevel
+
+
 class AnalysisResult(BaseModel):
     """The full 6-layer output returned to the frontend."""
     mode: AnalysisMode
@@ -83,6 +110,8 @@ class AnalysisResult(BaseModel):
     safe_actions: List[str]       # Layer 5
     block_report_guidance: List[str]  # Layer 6
     highlighted_phrases: List[HighlightedPhrase]
+    decision_risk: DecisionRisk
+    attack_forecast: Optional[AttackForecast] = None
     analyzed_at: str              # ISO timestamp
 
 
