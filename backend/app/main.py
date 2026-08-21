@@ -14,10 +14,23 @@ from __future__ import annotations
 
 import json
 from typing import Optional
+import asyncio
+import random
 
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from vosk import Model, KaldiRecognizer
+from .modules.scam_scorer import ConvState
+
+# Load Vosk model globally
+try:
+    vosk_model = Model("model")
+    print("[OK] Vosk model loaded successfully!")
+except Exception as e:
+    print(f"[ERROR] Error loading Vosk model: {e}")
+    vosk_model = None
+
 
 load_dotenv()
 
@@ -166,3 +179,101 @@ def history(limit: int = 20) -> list:
 def escalations(limit: int = 20) -> list:
     limit = max(1, min(limit, 100))
     return recent_escalations(limit)
+
+
+@app.websocket("/api/ws/call-stream-test")
+async def websocket_test_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    conv_state = ConvState()
+    
+    dialogue = [
+        "Hello, this is Inspector Rahul Sharma calling from the CBI Cyber Crime Investigation Department.",
+        "We have detected suspicious activity associated with your card and bank account.",
+        "This is an ongoing federal investigation. You must keep this secret and do not discuss it with anyone, including your family.",
+        "To prevent immediate arrest, you must cooperate with us right now.",
+        "Open your UPI banking app immediately to verify your identity.",
+        "We are sending you a verification code. Share the OTP pin number with me within 2 minutes."
+    ]
+    
+    current_index = 0
+    full_transcript = []
+    
+    try:
+        while True:
+            try:
+                msg = await asyncio.wait_for(websocket.receive_text(), timeout=2.5)
+                if msg == "reset":
+                    conv_state = ConvState()
+                    current_index = 0
+                    full_transcript = []
+            except asyncio.TimeoutError:
+                pass
+            
+            if current_index < len(dialogue):
+                current_sentence = dialogue[current_index]
+                full_transcript.append(current_sentence)
+                score, evidence = conv_state.update(current_sentence)
+                current_index += 1
+            else:
+                score = conv_state.score
+                evidence = conv_state.evidence
+                
+            await websocket.send_json({
+                "score": score,
+                "transcript": " ".join(full_transcript),
+                "evidence": evidence,
+                "action": "freeze" if score >= 75 else "none"
+            })
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        print(f"WS error: {e}")
+
+
+@app.websocket("/api/ws/call-stream")
+async def websocket_call_stream(websocket: WebSocket):
+    await websocket.accept()
+    if vosk_model is None:
+        await websocket.send_json({"error": "Vosk model not loaded on server."})
+        await websocket.close()
+        return
+        
+    rec = KaldiRecognizer(vosk_model, 16000)
+    conv_state = ConvState()
+    
+    try:
+        while True:
+            # Receive binary Int16 PCM chunks
+            data = await websocket.receive_bytes()
+            if rec.AcceptWaveform(data):
+                res = json.loads(rec.Result())
+                text = res.get("text", "")
+                if text:
+                    score, evidence = conv_state.update(text)
+                    await websocket.send_json({
+                        "score": score,
+                        "transcript": text,
+                        "evidence": evidence,
+                        "is_final": True
+                    })
+            else:
+                res = json.loads(rec.PartialResult())
+                partial_text = res.get("partial", "")
+                if partial_text:
+                    temp_state = ConvState()
+                    temp_state.score = conv_state.score
+                    temp_state.hits = conv_state.hits.copy()
+                    temp_state.evidence = list(conv_state.evidence)
+                    
+                    score, evidence = temp_state.update(partial_text)
+                    await websocket.send_json({
+                        "score": score,
+                        "transcript": partial_text,
+                        "evidence": evidence,
+                        "is_final": False
+                    })
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        print(f"Call stream error: {e}")
+
