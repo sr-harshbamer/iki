@@ -20,9 +20,20 @@ from .schemas import Severity, Signal, ThreatCategory
 URGENCY_PATTERNS = [
     r"\bact now\b", r"\bimmediately\b", r"\bwithin\s+\d+\s*(minutes?|hours?)\b",
     r"\bfinal warning\b", r"\bexpires?\s+(today|soon|in)\b",
-    r"\burgent\b", r"\blast chance\b", r"\bsuspended?\b",
+    r"\burgent(ly|cy)?\b", r"\blast chance\b", r"\bsuspended?\b",
     r"\bblocked?\b.*\baccount\b", r"\bverify (now|immediately)\b",
+    r"\bright now\b", r"\bas soon as possible\b", r"\basap\b",
     r"\bsegera\b", r"\bdalam\s+\d+\s*(menit|jam)\b", r"\bterakhir\b",
+]
+
+# Pressure to cut the victim off from anyone who could break the spell --
+# a close cousin of urgency, but distinct enough (and common enough in
+# impersonation/family-emergency scams) to warrant its own signal.
+ISOLATION_PATTERNS = [
+    r"\bdon.?t call\b", r"\bcan.?t talk\b", r"\bdon.?t contact\b",
+    r"\bdon.?t tell (anyone|anybody|him|her|them)\b",
+    r"\bkeep this (private|secret|between us|confidential)\b",
+    r"\bdo not (contact|call|tell)\b", r"\bonly (message|text) me\b",
 ]
 
 CREDENTIAL_REQUEST_PATTERNS = [
@@ -51,10 +62,15 @@ REWARD_BAIT_PATTERNS = [
 
 FINANCIAL_FRAUD_PATTERNS = [
     r"\btransfer\s+(rp|idr|usd|\$)\s?[\d,.]+", r"\bwire transfer\b",
+    r"\btransfer\s+(it|the money|funds|this)\b", r"\bsend\s+(money|funds|cash)\b",
     r"\bpay.*(fee|biaya|admin)\b", r"\bdeposit.*(first|dulu|upfront)\b",
     r"\binheritance\b", r"\bwarisan\b", r"\btax refund\b",
     r"\binvestment.*guaranteed\b", r"\bguaranteed (return|profit)\b",
     r"\bdouble your money\b", r"\buang.*kembali.*dua kali\b",
+    # Bare monetary amounts (₹35,000 / 35,000 rupees / $500 / Rp500.000) --
+    # a specific number being asked for is itself a financial-intent signal,
+    # independent of exactly how the request is phrased.
+    r"[₹$]\s?\d[\d,.]{2,}", r"\b\d[\d,]{2,}\s*(rupees?|inr|rp|idr)\b",
 ]
 
 THREAT_PATTERNS = [
@@ -107,6 +123,17 @@ def analyze_message(text: str) -> Tuple[List[Signal], ThreatCategory]:
             severity=Severity.HIGH,
             evidence=urgency_hits,
             category_hint=ThreatCategory.PHISHING,
+        ))
+
+    # --- Isolation / secrecy pressure ---------------------------------------
+    isolation_hits = _find_matches(normalized, ISOLATION_PATTERNS)
+    if isolation_hits:
+        signals.append(Signal(
+            id="isolation_tactic",
+            label="Pressures you to cut off outside contact",
+            severity=Severity.HIGH,
+            evidence=isolation_hits,
+            category_hint=ThreatCategory.IMPERSONATION,
         ))
 
     # --- Impersonation of trusted brands ------------------------------------

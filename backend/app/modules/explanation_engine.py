@@ -24,6 +24,10 @@ WHY_FLAGGED_TEMPLATES = {
     "brand_impersonation":
         "It references a trusted brand or institution ({ev}), which is a common "
         "way to borrow authority that the sender has not proven.",
+    "isolation_tactic":
+        "It pressures you not to contact anyone else ({ev}) -- cutting off "
+        "outside verification is a classic tactic to stop you from checking "
+        "the story before you act.",
     "reward_bait":
         "It dangles a prize or reward ({ev}) to lower your guard before asking "
         "for information or payment.",
@@ -121,6 +125,9 @@ WHY_NOT_PROCEED = {
     "brand_impersonation":
         "If the sender is not actually that institution, responding confirms "
         "that your number or email is active and worth targeting again.",
+    "isolation_tactic":
+        "A request to keep this between just the two of you removes your "
+        "chance to verify the story with someone who could spot it's false.",
     "reward_bait":
         "Prize and reward lures almost always lead to either a fee request, "
         "credential theft, or both.",

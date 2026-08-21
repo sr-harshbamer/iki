@@ -7,6 +7,7 @@ export const SIGNAL_LABELS: Record<string, string> = {
   credential_request: "Credential or OTP request",
   urgency_pressure: "Urgency or time pressure",
   brand_impersonation: "Brand impersonation",
+  isolation_tactic: "Isolation / secrecy pressure",
   reward_bait: "Prize or reward bait",
   financial_fraud_wording: "Financial fraud wording",
   coercive_threat: "Coercive threat",
