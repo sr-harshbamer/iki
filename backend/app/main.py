@@ -5,6 +5,9 @@ Exposes:
     POST /api/analyze          run an analysis
     POST /api/analyze-image    run an analysis on an uploaded screenshot
     GET  /api/sender-lookup    check a sender's history before engaging
+    WS   /ws/live               live conversation monitor -- reacts to each
+                                new message as it arrives, escalates on its
+                                own the instant risk crosses a threshold
     GET  /api/insights         aggregated insights for the dashboard
     GET  /api/history          recent analysis history
     GET  /api/escalations      recent high-risk escalation events
@@ -12,11 +15,21 @@ Exposes:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -30,10 +43,14 @@ from .modules.data_access import (
     save_analysis,
     update_sender_profile,
 )
-from .modules.escalation_engine import handle_escalation, should_escalate
-from .modules.pipeline import run_analysis, run_image_analysis
-from .modules.risk_scoring import score_to_level
+from .modules.decision_risk import assess_decision_risk
+from .modules.escalation_engine import ESCALATION_LEVELS, handle_escalation, should_escalate
+from .modules.llm_analysis import analyze_with_llm
+from .modules.message_analysis import analyze_message
+from .modules.pipeline import _build_result, run_analysis, run_image_analysis
+from .modules.risk_scoring import score_signals, score_to_level
 from .modules.schemas import (
+    AnalysisMode,
     AnalysisRequest,
     AnalysisResult,
     ImageAnalysisResponse,
@@ -149,6 +166,103 @@ def sender_lookup(sender_id: str) -> SenderLookupResult:
         signal_ids=json.loads(profile["signal_ids"]),
         last_seen=profile["last_seen"],
     )
+
+
+@app.websocket("/ws/live")
+async def live_guard(websocket: WebSocket, sender_id: Optional[str] = None) -> None:
+    """
+    Live conversation monitor. The client pushes one new message at a time
+    as it "arrives"; this reacts to each one immediately, on its own --
+    there is no "Analyze" button on this path. Two-speed by design:
+
+    - Fast lane (every message, instant): the rule-based analyzer re-scores
+      the whole conversation so far. This is what makes it feel live.
+    - Slow lane (every message, ~1-3s behind): the semantic LLM pass runs
+      in the background and pushes a follow-up update when it resolves,
+      without blocking the fast lane's instant feedback.
+
+    The moment the score crosses a High Risk / Likely Scam threshold, this
+    escalates automatically -- logs the incident and fires the trusted-
+    contact webhook if configured -- with no user action, exactly once per
+    connection. That automatic reaction is the actual difference between a
+    checker and a monitor.
+    """
+    await websocket.accept()
+    sender_profile = get_sender_profile(sender_id) if sender_id else None
+    lines: list[str] = []
+    escalated = False
+
+    async def run_semantic_update(full_text: str, generation: int) -> None:
+        """Slow lane: runs off the main loop so it never blocks fast-lane
+        updates for the next incoming message."""
+        llm_signals, forecast = await asyncio.to_thread(
+            analyze_with_llm, full_text, AnalysisMode.MESSAGE
+        )
+        if not llm_signals and not forecast:
+            return
+        if generation != len(lines):
+            return  # a newer message has already superseded this pass
+        rule_signals, category = analyze_message(full_text)
+        all_signals = rule_signals + llm_signals
+        result = _build_result(
+            AnalysisMode.MESSAGE, category, all_signals, sender_profile, forecast=forecast
+        )
+        await websocket.send_json({
+            "type": "semantic_update",
+            "score": result.risk_score,
+            "level": result.risk_level.value,
+            "signals": [s.model_dump(mode="json") for s in result.signals],
+            "decision_risk": result.decision_risk.model_dump(mode="json"),
+            "attack_forecast": result.attack_forecast.model_dump(mode="json") if result.attack_forecast else None,
+        })
+        await maybe_escalate(full_text, result)
+
+    async def maybe_escalate(full_text: str, result: AnalysisResult) -> None:
+        nonlocal escalated
+        if escalated or not should_escalate(result):
+            return
+        escalated = True
+        await asyncio.to_thread(handle_escalation, full_text, result)
+        if sender_id:
+            await asyncio.to_thread(update_sender_profile, sender_id, result)
+        await websocket.send_json({
+            "type": "escalation",
+            "message": f"Protection activated automatically -- {result.risk_level.value} detected live.",
+        })
+
+    try:
+        while True:
+            raw = await websocket.receive_json()
+            line = str(raw.get("text", "")).strip()
+            if not line:
+                continue
+            lines.append(line)
+            full_text = " ".join(lines)
+
+            rule_signals, category = analyze_message(full_text)
+            score, level, (conf_low, conf_high) = score_signals(rule_signals)
+            decision_risk = assess_decision_risk(rule_signals, score)
+
+            await websocket.send_json({
+                "type": "update",
+                "new_line": line,
+                "message_count": len(lines),
+                "score": score,
+                "level": level.value,
+                "category": category.value,
+                "signals": [s.model_dump(mode="json") for s in rule_signals],
+                "decision_risk": decision_risk.model_dump(mode="json"),
+            })
+
+            if level in ESCALATION_LEVELS:
+                result = _build_result(
+                    AnalysisMode.MESSAGE, category, rule_signals, sender_profile
+                )
+                await maybe_escalate(full_text, result)
+
+            asyncio.create_task(run_semantic_update(full_text, len(lines)))
+    except WebSocketDisconnect:
+        pass
 
 
 @app.get("/api/insights")
