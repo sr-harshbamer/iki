@@ -37,6 +37,8 @@ export const SIGNAL_LABELS: Record<string, string> = {
   // Sender anomaly
   sender_anomaly_score_spike: "Unusual risk spike for this sender",
   sender_anomaly_new_pattern: "New pattern for this sender",
+  // Image / screenshot intelligence
+  qr_code_detected: "QR code detected",
 };
 
 export function signalLabel(id: string): string {

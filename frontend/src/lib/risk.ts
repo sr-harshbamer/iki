@@ -74,5 +74,6 @@ export function modeLabel(mode: string): string {
   if (mode === "message") return "Message Check";
   if (mode === "link") return "Link Check";
   if (mode === "job_offer") return "Job Offer Check";
+  if (mode === "image") return "Image Check";
   return mode;
 }

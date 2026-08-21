@@ -4,11 +4,14 @@ import { cn } from "@/lib/cn";
 import type { AnalysisMode } from "@/lib/types";
 import { Sparkles } from "lucide-react";
 
+/** Modes handled by this text-based input (Image Check uses ImageInput instead). */
+type TextMode = Exclude<AnalysisMode, "image">;
+
 /**
  * Per-mode sample inputs. These are short, realistic, and cover the red flags
  * each analyzer looks for — so users can see the result experience immediately.
  */
-const SAMPLES: Record<AnalysisMode, { label: string; value: string }[]> = {
+const SAMPLES: Record<TextMode, { label: string; value: string }[]> = {
   message: [
     {
       label: "Bank OTP phishing",
@@ -64,7 +67,7 @@ export function ContentInput({
   onChange,
   disabled,
 }: {
-  mode: AnalysisMode;
+  mode: TextMode;
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;

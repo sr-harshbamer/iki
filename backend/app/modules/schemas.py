@@ -17,6 +17,7 @@ class AnalysisMode(str, Enum):
     MESSAGE = "message"
     LINK = "link"
     JOB_OFFER = "job_offer"
+    IMAGE = "image"
 
 
 class RiskLevel(str, Enum):
@@ -83,3 +84,11 @@ class AnalysisResult(BaseModel):
     block_report_guidance: List[str]  # Layer 6
     highlighted_phrases: List[HighlightedPhrase]
     analyzed_at: str              # ISO timestamp
+
+
+class ImageAnalysisResponse(BaseModel):
+    """Response for /api/analyze-image. Includes the vision-extracted text
+    alongside the usual result, since there's no original text input for the
+    frontend to fall back on when displaying the analyzed content."""
+    result: AnalysisResult
+    extracted_text: str

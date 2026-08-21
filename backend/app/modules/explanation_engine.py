@@ -103,6 +103,10 @@ WHY_FLAGGED_TEMPLATES = {
         "{ev} That is a sharp deviation from how this sender normally communicates.",
     "sender_anomaly_new_pattern":
         "{ev} This sender has not used this kind of language in any prior message.",
+    # Image / screenshot intelligence (Phase 5)
+    "qr_code_detected":
+        "The image contains a QR code encoding {ev} -- scanning it would take "
+        "you to that destination without you seeing the URL first.",
 }
 
 
@@ -184,6 +188,9 @@ WHY_NOT_PROCEED = {
     "sender_anomaly_new_pattern":
         "A pattern this sender has never used before may mean you are no "
         "longer talking to the same person or account.",
+    "qr_code_detected":
+        "QR codes hide their destination until after you've already scanned "
+        "them, which is exactly why scammers use them to bypass link scrutiny.",
 }
 
 

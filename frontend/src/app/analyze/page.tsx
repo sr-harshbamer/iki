@@ -1,9 +1,10 @@
 "use client";
 
 import { ContentInput } from "@/components/ContentInput";
+import { ImageInput } from "@/components/ImageInput";
 import { ModeTabs } from "@/components/ModeTabs";
 import { RiskVerdictPanel } from "@/components/RiskVerdictPanel";
-import { analyze } from "@/lib/api";
+import { analyze, analyzeImage } from "@/lib/api";
 import type { AnalysisMode, AnalysisResult } from "@/lib/types";
 import { AlertCircle, Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -11,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export default function AnalyzePage() {
   const [mode, setMode] = useState<AnalysisMode>("message");
   const [content, setContent] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [senderId, setSenderId] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [analyzedContent, setAnalyzedContent] = useState<string>("");
@@ -25,7 +27,41 @@ export default function AnalyzePage() {
     setError(null);
   }, [mode]);
 
+  const isImageMode = mode === "image";
+  const canSubmit = isImageMode ? imageFile !== null : content.trim().length > 0;
+
   const handleAnalyze = useCallback(async () => {
+    if (isImageMode) {
+      if (!imageFile) {
+        setError("Please upload a screenshot first.");
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await analyzeImage(imageFile, senderId);
+        setResult(res.result);
+        setAnalyzedContent(
+          res.extracted_text || "(no readable text found in this image)",
+        );
+        requestAnimationFrame(() => {
+          resultRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      } catch (e) {
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Something went wrong. Please try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     const trimmed = content.trim();
     if (!trimmed) {
       setError("Please paste some content first.");
@@ -53,7 +89,7 @@ export default function AnalyzePage() {
     } finally {
       setLoading(false);
     }
-  }, [mode, content]);
+  }, [mode, content, imageFile, senderId, isImageMode]);
 
   return (
     <>
@@ -62,12 +98,12 @@ export default function AnalyzePage() {
         <div className="container-wide py-12 sm:py-16">
           <span className="eyebrow">Analyze</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
-            Check a suspicious message, link, or job offer
+            Check a suspicious message, link, job offer, or screenshot
           </h1>
           <p className="mt-3 max-w-2xl text-ink-600">
-            Pick the mode that matches what you received, paste the content, and
-            Veridra will return a clear verdict with the specific red flags and
-            next steps.
+            Pick the mode that matches what you received, paste the content or
+            upload a screenshot, and Veridra will return a clear verdict with
+            the specific red flags and next steps.
           </p>
         </div>
       </section>
@@ -78,12 +114,20 @@ export default function AnalyzePage() {
           <ModeTabs value={mode} onChange={setMode} />
 
           <div className="card p-6 sm:p-8">
-            <ContentInput
-              mode={mode}
-              value={content}
-              onChange={setContent}
-              disabled={loading}
-            />
+            {isImageMode ? (
+              <ImageInput
+                file={imageFile}
+                onChange={setImageFile}
+                disabled={loading}
+              />
+            ) : (
+              <ContentInput
+                mode={mode}
+                value={content}
+                onChange={setContent}
+                disabled={loading}
+              />
+            )}
 
             <div className="mt-5 space-y-1.5">
               <label className="text-sm font-medium text-ink-800">
@@ -114,11 +158,12 @@ export default function AnalyzePage() {
                 a short preview is stored.
               </p>
               <div className="flex items-center gap-2">
-                {content && (
+                {(isImageMode ? imageFile : content) && (
                   <button
                     type="button"
                     onClick={() => {
                       setContent("");
+                      setImageFile(null);
                       setResult(null);
                       setError(null);
                     }}
@@ -131,7 +176,7 @@ export default function AnalyzePage() {
                 <button
                   type="button"
                   onClick={handleAnalyze}
-                  disabled={loading || !content.trim()}
+                  disabled={loading || !canSubmit}
                   className="btn-brand px-5 py-2.5"
                 >
                   {loading ? (
@@ -179,7 +224,11 @@ function EmptyState({ mode }: { mode: AnalysisMode }) {
       ? "a suspicious message"
       : mode === "link"
       ? "a suspicious URL"
+      : mode === "image"
+      ? "a screenshot"
       : "a recruiter message or job offer";
+
+  const verb = mode === "image" ? "Upload" : "Paste";
 
   return (
     <div className="card flex flex-col items-center gap-3 p-10 text-center">
@@ -190,7 +239,7 @@ function EmptyState({ mode }: { mode: AnalysisMode }) {
         Your result will appear here
       </h2>
       <p className="max-w-md text-sm text-ink-600">
-        Paste {label} above and click <span className="font-medium">Analyze content</span>.
+        {verb} {label} above and click <span className="font-medium">Analyze content</span>.
         Veridra returns a clear risk verdict, the exact red flags it found, and
         what to do next — usually in under a second.
       </p>

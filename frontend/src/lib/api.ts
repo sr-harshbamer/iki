@@ -3,6 +3,7 @@ import type {
   AnalysisResult,
   EscalationItem,
   HistoryItem,
+  ImageAnalysisResponse,
   InsightsSummary,
 } from "./types";
 
@@ -22,6 +23,25 @@ export async function analyze(
       content,
       sender_id: senderId?.trim() || undefined,
     }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`Analysis failed: ${text}`);
+  }
+  return res.json();
+}
+
+export async function analyzeImage(
+  file: File,
+  senderId?: string,
+): Promise<ImageAnalysisResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  if (senderId?.trim()) form.append("sender_id", senderId.trim());
+
+  const res = await fetch(`${BASE}/api/analyze-image`, {
+    method: "POST",
+    body: form,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);

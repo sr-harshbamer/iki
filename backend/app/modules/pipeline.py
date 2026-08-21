@@ -7,7 +7,7 @@ into a single `run_analysis` call used by the API layer.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from .anomaly_detection import detect_sender_anomaly
 from .block_report_guidance import build_block_report_guidance
@@ -16,6 +16,7 @@ from .explanation_engine import (
     build_why_flagged,
     build_why_not_proceed,
 )
+from .image_analysis import GEMINI_API_KEY, analyze_image_with_llm, decode_qr_signals
 from .job_offer_analysis import analyze_job_offer
 from .link_analysis import analyze_link
 from .llm_analysis import analyze_with_llm
@@ -27,6 +28,7 @@ from .schemas import (
     AnalysisRequest,
     AnalysisResult,
     RiskLevel,
+    Signal,
     ThreatCategory,
 )
 
@@ -46,9 +48,58 @@ def run_analysis(req: AnalysisRequest, sender_profile: Optional[dict] = None) ->
     if req.mode in (AnalysisMode.MESSAGE, AnalysisMode.JOB_OFFER):
         signals = signals + analyze_with_llm(req.content, req.mode)
 
+    return _build_result(req.mode, category, signals, sender_profile)
+
+
+def run_image_analysis(
+    image_bytes: bytes,
+    mime_type: str,
+    sender_profile: Optional[dict] = None,
+) -> Tuple[AnalysisResult, str]:
+    """
+    Screenshot intelligence: vision-extract text + visual cues from the
+    image, run the extracted text through the exact same pipeline as a
+    pasted message, decode any QR code into a real link-analysis check, and
+    merge everything into one result.
+
+    Returns (result, extracted_text) -- the caller shows extracted_text to
+    the user as the "analyzed content" so they can see what Veridra read.
+    """
+    extracted_text, visual_signals = analyze_image_with_llm(image_bytes, mime_type)
+    qr_value, qr_signals, qr_category = decode_qr_signals(image_bytes)
+
+    text_signals: List[Signal] = []
+    category = ThreatCategory.NONE
+    if extracted_text:
+        text_signals, category = analyze_message(extracted_text)
+        text_signals = text_signals + analyze_with_llm(extracted_text, AnalysisMode.MESSAGE)
+
+    if category == ThreatCategory.NONE:
+        category = qr_category
+
+    signals = text_signals + visual_signals + qr_signals
+
+    empty_reason = None
+    if not extracted_text and not qr_value and not GEMINI_API_KEY:
+        empty_reason = (
+            "Veridra could not read this image because no vision API key is "
+            "configured yet -- ask the site operator to set GEMINI_API_KEY."
+        )
+
+    result = _build_result(AnalysisMode.IMAGE, category, signals, sender_profile, empty_reason)
+    return result, extracted_text
+
+
+def _build_result(
+    mode: AnalysisMode,
+    category: ThreatCategory,
+    signals: List[Signal],
+    sender_profile: Optional[dict],
+    empty_reason: Optional[str] = None,
+) -> AnalysisResult:
     score, level, (conf_low, conf_high) = score_signals(signals)
 
-    # Sender anomaly pass -- compares this message against the sender's own
+    # Sender anomaly pass -- compares this analysis against the sender's own
     # history (only runs when the caller supplied a known sender profile).
     # Uses the score computed above as the "baseline-relative" comparison
     # point, then rescoring folds any anomaly signal into the final result.
@@ -63,7 +114,8 @@ def run_analysis(req: AnalysisRequest, sender_profile: Optional[dict] = None) ->
     # If nothing triggered, we surface that clearly instead of faking risk
     if level == RiskLevel.SAFE and category == ThreatCategory.NONE:
         why_flagged = [
-            "No known red-flag patterns were detected in the content you provided."
+            empty_reason
+            or "No known red-flag patterns were detected in the content you provided."
         ]
         why_not_proceed = [
             "Even clean-looking content can be risky in context. If you did not "
@@ -74,12 +126,16 @@ def run_analysis(req: AnalysisRequest, sender_profile: Optional[dict] = None) ->
         why_flagged = build_why_flagged(signals)
         why_not_proceed = build_why_not_proceed(signals)
 
-    safe_actions = build_safe_actions(req.mode, category, signals)
-    block_report = build_block_report_guidance(req.mode, category)
+    # Image screenshots are almost always a photographed message (SMS/chat/
+    # email) -- reuse MESSAGE-mode remediation guidance so users still get
+    # concrete "block/report" steps instead of a generic fallback.
+    guidance_mode = AnalysisMode.MESSAGE if mode == AnalysisMode.IMAGE else mode
+    safe_actions = build_safe_actions(guidance_mode, category, signals)
+    block_report = build_block_report_guidance(guidance_mode, category)
     highlights = build_highlighted_phrases(signals)
 
     return AnalysisResult(
-        mode=req.mode,
+        mode=mode,
         risk_level=level,
         risk_score=score,
         confidence_low=conf_low,

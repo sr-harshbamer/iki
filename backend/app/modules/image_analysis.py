@@ -1,0 +1,184 @@
+"""
+Image & screenshot intelligence.
+
+Many scams arrive as screenshots rather than pasted text. This module has
+two independent jobs:
+
+1. Send the image to a vision-capable LLM (Gemini) to transcribe visible
+   text -- replacing traditional OCR -- and separately describe VISUAL red
+   flags a text-only pipeline can't see: urgency-styled banners, layout that
+   imitates a bank/brand's official look, spoofed app chrome. This needs
+   GEMINI_API_KEY; without it, text extraction is unavailable (degrades to
+   empty, not an error).
+
+2. Decode any QR code in the image with OpenCV (fully offline, no API key
+   needed) and hand its target URL to the existing link analyzer for a real
+   structural check -- not a vision model's guess about what a QR "looks
+   like it does".
+
+The extracted text is then run through the ordinary message pipeline by the
+caller (pipeline.run_image_analysis), so screenshots get the exact same
+rule-based + semantic analysis as a pasted message.
+"""
+from __future__ import annotations
+
+import base64
+import json
+import os
+import re
+from typing import List, Optional, Tuple
+
+import cv2
+import httpx
+import numpy as np
+
+from .link_analysis import analyze_link
+from .schemas import Severity, Signal, ThreatCategory
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_VISION_MODEL = os.environ.get("GEMINI_VISION_MODEL", "gemini-3.6-flash")
+GEMINI_URL = (
+    f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_VISION_MODEL}:generateContent"
+)
+
+_SEVERITY_MAP = {
+    "low": Severity.LOW,
+    "medium": Severity.MEDIUM,
+    "high": Severity.HIGH,
+    "critical": Severity.CRITICAL,
+}
+
+_RESPONSE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "extracted_text": {"type": "STRING"},
+        "visual_findings": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "label": {"type": "STRING"},
+                    "explanation": {"type": "STRING"},
+                    "severity": {
+                        "type": "STRING",
+                        "enum": ["low", "medium", "high", "critical"],
+                    },
+                },
+                "required": ["label", "explanation", "severity"],
+            },
+        },
+    },
+    "required": ["extracted_text", "visual_findings"],
+}
+
+_PROMPT = """You are a fraud-detection assistant reviewing a screenshot for social-engineering risk.
+
+1. Transcribe ALL visible text in the image exactly as written. This will be run \
+through a separate text analyzer, so completeness matters more than tidiness.
+
+2. Separately, note any VISUAL red flags a text-only reader would miss: \
+urgency-styled banners (alarm colors/icons), layout that imitates a specific \
+bank or brand's official look, spoofed sender/app UI chrome, or anything \
+visually inconsistent with a legitimate message. Do NOT re-report things that \
+are purely about wording or phrasing -- only visual/design cues a person \
+reading plain text would never see.
+
+If the image contains no readable text and no visual red flags, return \
+extracted_text as an empty string and an empty findings list.
+"""
+
+
+def _slug(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")[:40] or "finding"
+
+
+def analyze_image_with_llm(image_bytes: bytes, mime_type: str) -> Tuple[str, List[Signal]]:
+    """Vision LLM pass: returns (extracted_text, visual_signals). Returns
+    ("", []) on any failure or when no Gemini key is configured."""
+    if not GEMINI_API_KEY:
+        return "", []
+
+    try:
+        b64 = base64.b64encode(image_bytes).decode("ascii")
+        resp = httpx.post(
+            GEMINI_URL,
+            params={"key": GEMINI_API_KEY},
+            json={
+                "contents": [{
+                    "parts": [
+                        {"text": _PROMPT},
+                        {"inline_data": {"mime_type": mime_type, "data": b64}},
+                    ]
+                }],
+                "generationConfig": {
+                    "response_mime_type": "application/json",
+                    "response_schema": _RESPONSE_SCHEMA,
+                    "temperature": 0.1,
+                },
+            },
+            # Gemini's reasoning models "think" before answering, especially
+            # with a JSON schema constraint on a multimodal (image) request --
+            # this can comfortably take 20-30s, so give it real headroom.
+            timeout=60.0,
+        )
+        resp.raise_for_status()
+        text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        parsed = json.loads(text)
+    except (httpx.HTTPError, KeyError, IndexError, json.JSONDecodeError):
+        return "", []
+
+    extracted_text = str(parsed.get("extracted_text", "")).strip()
+
+    signals: List[Signal] = []
+    for finding in parsed.get("visual_findings", [])[:5]:
+        label = str(finding.get("label", "")).strip()
+        if not label:
+            continue
+        severity = _SEVERITY_MAP.get(str(finding.get("severity", "")).lower(), Severity.MEDIUM)
+        evidence = [finding["explanation"]] if finding.get("explanation") else []
+        signals.append(Signal(
+            id=f"visual_{_slug(label)}",
+            label=f"Visual review: {label}",
+            severity=severity,
+            evidence=evidence,
+            category_hint=None,
+        ))
+    return extracted_text, signals
+
+
+_URL_RE = re.compile(r"^https?://", re.IGNORECASE)
+
+
+def decode_qr_signals(image_bytes: bytes) -> Tuple[Optional[str], List[Signal], ThreatCategory]:
+    """Fully offline QR decode via OpenCV. If the QR payload looks like a
+    URL, runs it through the real link analyzer instead of guessing from
+    appearance. Returns (decoded_value, signals, category)."""
+    arr = np.frombuffer(image_bytes, dtype=np.uint8)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if img is None:
+        return None, [], ThreatCategory.NONE
+
+    detector = cv2.QRCodeDetector()
+    try:
+        data, _points, _straight = detector.detectAndDecode(img)
+    except cv2.error:
+        return None, [], ThreatCategory.NONE
+
+    if not data:
+        return None, [], ThreatCategory.NONE
+
+    signals: List[Signal] = [Signal(
+        id="qr_code_detected",
+        label="QR code detected in image",
+        severity=Severity.MEDIUM,
+        evidence=[data],
+        category_hint=None,
+    )]
+
+    category = ThreatCategory.NONE
+    if _URL_RE.match(data):
+        link_signals, link_category = analyze_link(data)
+        signals.extend(link_signals)
+        category = link_category
+
+    return data, signals, category

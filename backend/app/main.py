@@ -3,6 +3,7 @@ Veridra — FastAPI entry point.
 
 Exposes:
     POST /api/analyze          run an analysis
+    POST /api/analyze-image    run an analysis on an uploaded screenshot
     GET  /api/insights         aggregated insights for the dashboard
     GET  /api/history          recent analysis history
     GET  /api/escalations      recent high-risk escalation events
@@ -10,8 +11,10 @@ Exposes:
 """
 from __future__ import annotations
 
+from typing import Optional
+
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -26,8 +29,11 @@ from .modules.data_access import (
     update_sender_profile,
 )
 from .modules.escalation_engine import handle_escalation, should_escalate
-from .modules.pipeline import run_analysis
-from .modules.schemas import AnalysisRequest, AnalysisResult
+from .modules.pipeline import run_analysis, run_image_analysis
+from .modules.schemas import AnalysisRequest, AnalysisResult, ImageAnalysisResponse
+
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
 
 
 app = FastAPI(
@@ -71,6 +77,41 @@ def analyze(req: AnalysisRequest, background_tasks: BackgroundTasks) -> Analysis
         # delays the verdict the user is waiting on.
         background_tasks.add_task(handle_escalation, req.content, result)
     return result
+
+
+@app.post("/api/analyze-image", response_model=ImageAnalysisResponse)
+def analyze_image(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    sender_id: Optional[str] = Form(None),
+) -> ImageAnalysisResponse:
+    # Sync def (not async) so FastAPI runs this in its threadpool -- the
+    # vision LLM call below is a blocking httpx request that can take up to
+    # 60s, which would otherwise freeze the whole event loop for every other
+    # request, same as why /api/analyze is a sync def too.
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported image type. Use PNG, JPEG, or WebP.",
+        )
+
+    image_bytes = file.file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Empty file.")
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="Image too large (5MB max).")
+
+    sender_profile = get_sender_profile(sender_id) if sender_id else None
+    result, extracted_text = run_image_analysis(image_bytes, file.content_type, sender_profile)
+
+    preview = extracted_text or "(image with no extracted text)"
+    save_analysis(preview, result)
+    if sender_id:
+        update_sender_profile(sender_id, result)
+    if should_escalate(result):
+        background_tasks.add_task(handle_escalation, preview, result)
+
+    return ImageAnalysisResponse(result=result, extracted_text=extracted_text)
 
 
 @app.get("/api/insights")
