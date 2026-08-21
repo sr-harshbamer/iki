@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+import { AttackSimulator } from "@/components/AttackSimulator";
 
 export default function LandingPage() {
   return (
@@ -49,6 +50,23 @@ export default function LandingPage() {
           {/* Preview card */}
           <div className="lg:col-span-5">
             <HeroPreview />
+          </div>
+        </div>
+      </section>
+
+      {/* ──────────────── Attack Simulator ──────────────── */}
+      <section className="bg-white py-16">
+        <div className="container-wide max-w-3xl">
+          <span className="eyebrow">See it work, instantly</span>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
+            No content to paste? Simulate a real attack.
+          </h2>
+          <p className="mt-3 text-ink-600">
+            These aren&apos;t canned answers — each scenario runs through the
+            exact same detection pipeline as anything you&apos;d paste yourself.
+          </p>
+          <div className="mt-6">
+            <AttackSimulator />
           </div>
         </div>
       </section>

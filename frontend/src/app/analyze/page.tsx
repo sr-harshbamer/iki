@@ -5,11 +5,23 @@ import { ImageInput } from "@/components/ImageInput";
 import { ModeTabs } from "@/components/ModeTabs";
 import { RiskVerdictPanel } from "@/components/RiskVerdictPanel";
 import { analyze, analyzeImage } from "@/lib/api";
+import { ATTACK_SCENARIOS, type AttackScenario } from "@/lib/scenarios";
 import type { AnalysisMode, AnalysisResult } from "@/lib/types";
 import { AlertCircle, Loader2, Search } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 export default function AnalyzePage() {
+  return (
+    <Suspense fallback={null}>
+      <AnalyzePageContent />
+    </Suspense>
+  );
+}
+
+function AnalyzePageContent() {
+  const searchParams = useSearchParams();
+  const autoRanRef = useRef(false);
   const [mode, setMode] = useState<AnalysisMode>("message");
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -26,6 +38,45 @@ export default function AnalyzePage() {
     setResult(null);
     setError(null);
   }, [mode]);
+
+  const runScenario = useCallback(async (scenario: AttackScenario) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await analyze(scenario.mode, scenario.content.trim(), scenario.senderId);
+      setResult(res);
+      setAnalyzedContent(scenario.content.trim());
+      requestAnimationFrame(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // "Simulate Attack" deep-links here as /analyze?scenario=<id> -- load that
+  // scenario's content into the form so it's visible, then run it through
+  // the real pipeline exactly as if it had been pasted by hand.
+  useEffect(() => {
+    if (autoRanRef.current) return;
+    const scenarioId = searchParams.get("scenario");
+    if (!scenarioId) return;
+    const scenario = ATTACK_SCENARIOS.find((s) => s.id === scenarioId);
+    if (!scenario) return;
+    autoRanRef.current = true;
+    setMode(scenario.mode);
+    setContent(scenario.content);
+    if (scenario.senderId) setSenderId(scenario.senderId);
+    // No cleanup here on purpose: React Strict Mode's dev-only
+    // mount->cleanup->remount cycle would cancel this scheduled call before
+    // it fires. The `autoRanRef` guard above already makes this a true
+    // one-shot regardless, so there's nothing for a cleanup to protect.
+    setTimeout(() => runScenario(scenario), 500);
+  }, [searchParams, runScenario]);
 
   const isImageMode = mode === "image";
   const canSubmit = isImageMode ? imageFile !== null : content.trim().length > 0;
