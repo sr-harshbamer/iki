@@ -34,7 +34,7 @@ def _send_webhook_alert(content_preview: str, result: AnalysisResult) -> bool:
     """Best-effort push notification. Returns True only if the request
     actually went out successfully."""
     summary = (
-        f"[Veridra] {result.risk_level.value} ({result.risk_score}/100) -- "
+        f"[SuSagi] {result.risk_level.value} ({result.risk_score}/100) -- "
         f"{result.threat_category.value} detected in a {result.mode.value} check.\n"
         f"Preview: {content_preview[:200]}"
     )

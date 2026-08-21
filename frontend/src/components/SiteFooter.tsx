@@ -30,7 +30,7 @@ export function SiteFooter() {
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-ink-900">Note</h4>
           <p className="text-xs leading-relaxed text-ink-500">
-            Veridra provides educational guidance and risk indicators. It is not
+            SuSagi provides educational guidance and risk indicators. It is not
             an official cybersecurity authority and does not automatically block,
             report, or take action on content for you.
           </p>
@@ -38,7 +38,7 @@ export function SiteFooter() {
       </div>
       <div className="hairline">
         <div className="container-wide flex flex-col gap-2 py-6 text-xs text-ink-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} Veridra. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} SuSagi. All rights reserved.</span>
           <span>Built for public cyber safety.</span>
         </div>
       </div>

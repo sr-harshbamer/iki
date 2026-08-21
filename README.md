@@ -1,8 +1,8 @@
-# Veridra
+# SuSagi
 
 > **A public cyber safety platform for suspicious messages, unsafe links, and fake job offers.**
 
-Veridra takes the digital content an ordinary person is already unsure about, a strange SMS, a suspicious URL, an aggressive recruiter DM, and returns a clear risk verdict, the specific red flags that triggered it, and the exact next steps they should take. It is explainable by design, evidence-based in its reasoning, and careful never to overclaim certainty or take action on anyone's behalf.
+SuSagi takes the digital content an ordinary person is already unsure about, a strange SMS, a suspicious URL, an aggressive recruiter DM, and returns a clear risk verdict, the specific red flags that triggered it, and the exact next steps they should take. It is explainable by design, evidence-based in its reasoning, and careful never to overclaim certainty or take action on anyone's behalf.
 
 ## Live Demo
 https://veridra-cyber-safety.vercel.app/
@@ -34,7 +34,7 @@ https://veridra-cyber-safety.vercel.app/
 
 ## Overview
 
-Veridra is a modular, full-stack web platform built around a single idea: a security verdict is only useful if the person receiving it understands *why*. Pasting a suspicious message, URL, or job offer returns:
+SuSagi is a modular, full-stack web platform built around a single idea: a security verdict is only useful if the person receiving it understands *why*. Pasting a suspicious message, URL, or job offer returns:
 
 - A clear **Risk Level** and 0–100 score with a confidence range
 - The specific **Threat Category** (phishing, OTP scam, fake job offer, etc.)
@@ -49,13 +49,13 @@ The result experience is the centerpiece: clean, serious, and built to be read a
 
 Most financial loss from digital fraud does not come from advanced exploits. It comes from routine messages, DMs, and emails that convince someone to share an OTP, click a convincing-looking link, or pay a "registration fee" for a job that does not exist. Professional security tools exist, but they are built for enterprise defenders — not for someone checking a suspicious SMS at a bus stop.
 
-Veridra closes that gap for ordinary users.
+SuSagi closes that gap for ordinary users.
 
 ## Public Value
 
 - **Accessibility.** No login, no account, works on any device.
 - **Explainability.** Every verdict shows its reasoning, so users learn the red flags over time.
-- **Responsibility.** Veridra never blocks, reports, or replies to anything automatically. It gives guidance — the user stays in control.
+- **Responsibility.** SuSagi never blocks, reports, or replies to anything automatically. It gives guidance — the user stays in control.
 - **Coverage.** Message, link, and job-offer analysis cover the three content types where everyday social-engineering attacks happen most.
 
 ## Main Features
@@ -106,7 +106,7 @@ Veridra closes that gap for ordinary users.
 ## Project Structure
 
 ```
-veridra/
+susagi/
 ├── backend/
 │   ├── requirements.txt
 │   └── app/
@@ -202,7 +202,7 @@ The Next.js rewrite in `next.config.js` proxies `/api/*` to the FastAPI backend,
 
 ## Risk Scoring Logic
 
-Veridra's scorer is deliberately transparent rather than opaque.
+SuSagi's scorer is deliberately transparent rather than opaque.
 
 1. **Signals.** Each analyzer returns a list of `Signal` objects, each carrying a severity (`low` / `medium` / `high` / `critical`) and the exact evidence that matched.
 2. **Weighted aggregation.** Severities map to base weights: low 8, medium 18, high 30, critical 45.
@@ -213,7 +213,7 @@ Veridra's scorer is deliberately transparent rather than opaque.
 
 ## Why Explanation Layers Matter
 
-A standalone "this looks suspicious" verdict is security theater: it asks the user to trust a black box. Veridra's output is structured to teach, not just to label:
+A standalone "this looks suspicious" verdict is security theater: it asks the user to trust a black box. SuSagi's output is structured to teach, not just to label:
 
 - **Layer 3 (Why it was flagged)** ties the verdict to observable evidence in the user's own content. They can see *why* the system thinks what it thinks.
 - **Layer 4 (Why you should not proceed)** translates the signals into real-world consequences, not abstract risk language.
@@ -223,24 +223,24 @@ Over time, the reasoning itself becomes the lesson: users start recognising urge
 
 ## Block & Report Guidance
 
-Layer 6 is intentionally advisory, not automated. Veridra does not:
+Layer 6 is intentionally advisory, not automated. SuSagi does not:
 
 - Block senders on the user's behalf
 - Submit reports to any platform or authority
 - Reply to, forward, or delete content
 
-Instead, for each analysis it returns concrete, platform-agnostic steps — block via the app's built-in feature, report as spam or phishing, forward to the impersonated brand's abuse address, keep evidence before deletion, and so on. This keeps control with the user and avoids creating the illusion that Veridra is a law-enforcement or takedown system.
+Instead, for each analysis it returns concrete, platform-agnostic steps — block via the app's built-in feature, report as spam or phishing, forward to the impersonated brand's abuse address, keep evidence before deletion, and so on. This keeps control with the user and avoids creating the illusion that SuSagi is a law-enforcement or takedown system.
 
 ## Limitations
 
-- **Heuristic, not oracular.** Veridra's analysis is rule- and pattern-based. Novel or carefully crafted attacks may evade detection, and legitimate content can occasionally match a pattern.
+- **Heuristic, not oracular.** SuSagi's analysis is rule- and pattern-based. Novel or carefully crafted attacks may evade detection, and legitimate content can occasionally match a pattern.
 - **Language coverage.** English and Indonesian red-flag patterns are included. Other languages may under-trigger until their patterns are added.
-- **No browser-level execution.** Link analysis is structural. Veridra does not follow redirects, render pages, or query threat-intelligence feeds.
+- **No browser-level execution.** Link analysis is structural. SuSagi does not follow redirects, render pages, or query threat-intelligence feeds.
 - **Local persistence.** The default SQLite store is per-deployment; for production, swap `data_access.py`'s backend for Postgres.
 
 ## Disclaimer
 
-Veridra is a **decision-support and educational tool**. It is not an official cybersecurity authority and does not replace law enforcement, your bank's fraud department, or formal incident response. Results should be treated as guidance, not as guarantees. When something matters — money, identity documents, or account access — verify through the sender's official channels before acting.
+SuSagi is a **decision-support and educational tool**. It is not an official cybersecurity authority and does not replace law enforcement, your bank's fraud department, or formal incident response. Results should be treated as guidance, not as guarantees. When something matters — money, identity documents, or account access — verify through the sender's official channels before acting.
 
 ## Future Improvements
 

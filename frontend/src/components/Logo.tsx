@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Veridra logomark — a shield formed from a rising check curve.
+ * SuSagi logomark — a shield formed from a rising check curve.
  * Conveys verification + protection without being generic.
  */
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
@@ -18,7 +18,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
       </span>
       {!compact && (
         <span className="text-[17px] font-semibold tracking-tight text-ink-900">
-          Veridra
+          SuSagi
         </span>
       )}
     </div>

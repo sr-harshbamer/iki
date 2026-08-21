@@ -1,7 +1,7 @@
 """
 Block / report guidance (Layer 6).
 
-Platform-agnostic steps. Veridra does NOT automatically block or report
+Platform-agnostic steps. SuSagi does NOT automatically block or report
 anything — this module only tells the user how to do it themselves.
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ def build_block_report_guidance(
     """
     Return a list of concrete, platform-agnostic steps the user can take to
     block the sender and report the content. These are suggestions only —
-    Veridra does not perform any of them on the user's behalf.
+    SuSagi does not perform any of them on the user's behalf.
     """
     guidance: List[str] = []
 

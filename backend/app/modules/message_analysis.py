@@ -15,7 +15,7 @@ from .schemas import Severity, Signal, ThreatCategory
 
 # ---- Pattern banks ----------------------------------------------------------
 # Phrases deliberately cover both English and Indonesian fraud patterns since
-# Veridra is aimed at ordinary users in mixed-language environments.
+# SuSagi is aimed at ordinary users in mixed-language environments.
 
 URGENCY_PATTERNS = [
     r"\bact now\b", r"\bimmediately\b", r"\bwithin\s+\d+\s*(minutes?|hours?)\b",

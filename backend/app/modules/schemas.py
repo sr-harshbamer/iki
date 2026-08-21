@@ -1,5 +1,5 @@
 """
-Shared data contracts for Veridra's analysis pipeline.
+Shared data contracts for SuSagi's analysis pipeline.
 
 Every analyzer (message / link / job offer) produces a list of `Signal` objects.
 The risk scorer aggregates them, and the explanation engine maps them to

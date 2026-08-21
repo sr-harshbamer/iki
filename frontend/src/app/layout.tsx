@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Veridra — Public Cyber Safety for Everyday Messages",
+  title: "SuSagi — Public Cyber Safety for Everyday Messages",
   description:
     "Evaluate suspicious messages, links, and job offers with clear, evidence-based reasoning and safe-action guidance.",
 };

@@ -16,7 +16,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-ink-200/80 bg-white/80 backdrop-blur">
       <div className="container-wide flex h-16 items-center justify-between">
-        <Link href="/" aria-label="Veridra home">
+        <Link href="/" aria-label="SuSagi home">
           <Logo />
         </Link>
         <nav className="flex items-center gap-1">

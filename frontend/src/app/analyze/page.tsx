@@ -102,7 +102,7 @@ export default function AnalyzePage() {
           </h1>
           <p className="mt-3 max-w-2xl text-ink-600">
             Pick the mode that matches what you received, paste the content or
-            upload a screenshot, and Veridra will return a clear verdict with
+            upload a screenshot, and SuSagi will return a clear verdict with
             the specific red flags and next steps.
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function AnalyzePage() {
                 spellCheck={false}
                 autoComplete="off"
                 className="input"
-                placeholder="e.g. a phone number or handle, so Veridra can learn what's normal for this sender"
+                placeholder="e.g. a phone number or handle, so SuSagi can learn what's normal for this sender"
                 value={senderId}
                 onChange={(e) => setSenderId(e.target.value)}
                 disabled={loading}
@@ -146,7 +146,7 @@ export default function AnalyzePage() {
               />
               <p className="text-xs text-ink-500">
                 Leave blank for a one-off, anonymous check. Tagging a sender lets
-                Veridra flag messages that are unusual compared to that sender's
+                SuSagi flag messages that are unusual compared to that sender's
                 own history — nothing is required to fill this in.
               </p>
             </div>
@@ -240,7 +240,7 @@ function EmptyState({ mode }: { mode: AnalysisMode }) {
       </h2>
       <p className="max-w-md text-sm text-ink-600">
         {verb} {label} above and click <span className="font-medium">Analyze content</span>.
-        Veridra returns a clear risk verdict, the exact red flags it found, and
+        SuSagi returns a clear risk verdict, the exact red flags it found, and
         what to do next — usually in under a second.
       </p>
     </div>

@@ -16,12 +16,12 @@ export default function AboutPage() {
       {/* ── Header ─────────────────────────────────────────────── */}
       <section className="border-b border-ink-200 bg-white">
         <div className="container-wide py-14 sm:py-20">
-          <span className="eyebrow">About Veridra</span>
+          <span className="eyebrow">About SuSagi</span>
           <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-ink-900 sm:text-5xl">
             Everyday cyber safety, explained in plain language.
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-ink-600">
-            Veridra helps ordinary people evaluate suspicious messages, links,
+            SuSagi helps ordinary people evaluate suspicious messages, links,
             and job offers with the same kind of reasoning a careful security
             professional would apply — without the jargon, the guesswork, or
             the false certainty.
@@ -50,7 +50,7 @@ export default function AboutPage() {
             <p>
               Professional security tools exist, but they are built for
               enterprise defenders, not for someone checking a suspicious SMS at
-              a bus stop. Veridra fills that gap: a clean, public-facing
+              a bus stop. SuSagi fills that gap: a clean, public-facing
               platform that takes content a person is already unsure about and
               returns a clear, explainable verdict they can act on.
             </p>
@@ -58,11 +58,11 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── What Veridra analyses ──────────────────────────────── */}
+      {/* ── What SuSagi analyses ──────────────────────────────── */}
       <section className="bg-ink-50 py-16">
         <div className="container-wide">
           <div className="max-w-2xl">
-            <span className="eyebrow">How Veridra analyses content</span>
+            <span className="eyebrow">How SuSagi analyses content</span>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">
               Each mode looks for the red flags that actually matter for that
               kind of content.
@@ -101,7 +101,7 @@ export default function AboutPage() {
               A verdict alone is not enough.
             </h2>
             <p className="mt-4 text-ink-600">
-              Every Veridra analysis returns six layers, from the headline risk
+              Every SuSagi analysis returns six layers, from the headline risk
               level all the way down to concrete next steps. Each layer is
               grounded in the specific evidence the analyser saw.
             </p>
@@ -153,11 +153,11 @@ export default function AboutPage() {
         <div className="container-wide grid gap-8 lg:grid-cols-3">
           <Principle
             title="Explainability over certainty"
-            body="Security verdicts that can't be explained are security theater. Veridra shows its work, so users can judge the reasoning themselves."
+            body="Security verdicts that can't be explained are security theater. SuSagi shows its work, so users can judge the reasoning themselves."
           />
           <Principle
             title="Guidance, not action"
-            body="Veridra never automatically blocks, reports, or replies to anything on your behalf. It gives you the steps — you stay in control."
+            body="SuSagi never automatically blocks, reports, or replies to anything on your behalf. It gives you the steps — you stay in control."
           />
           <Principle
             title="Public, not gatekept"
@@ -203,7 +203,7 @@ export default function AboutPage() {
               Important scope and limitations
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-ink-700">
-              Veridra is a decision-support and educational platform. It does{" "}
+              SuSagi is a decision-support and educational platform. It does{" "}
               <strong>not</strong> replace official cybersecurity authorities,
               law-enforcement reporting channels, or your bank&apos;s fraud
               department. Results reflect heuristic analysis of the content you

@@ -90,7 +90,7 @@ export default function InsightsPage() {
         <div className="container-wide py-12 sm:py-16">
           <span className="eyebrow">Safety Insights</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
-            What Veridra is seeing across recent analyses
+            What SuSagi is seeing across recent analyses
           </h1>
           <p className="mt-3 max-w-2xl text-ink-600">
             Aggregated, privacy-minimal view of threat categories, red-flag
@@ -280,7 +280,7 @@ export default function InsightsPage() {
             <SectionHeader
               icon={<Activity className="h-4 w-4" />}
               title="Recent analyses"
-              subtitle="Most recent checks run on Veridra"
+              subtitle="Most recent checks run on SuSagi"
             />
             {!history ? (
               <EmptyBlock />

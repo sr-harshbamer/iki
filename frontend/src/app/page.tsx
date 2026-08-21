@@ -26,7 +26,7 @@ export default function LandingPage() {
               before you act on it.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-600">
-              Veridra analyses suspicious messages, links, and job offers and
+              SuSagi analyses suspicious messages, links, and job offers and
               returns a clear risk level, the specific red flags that triggered
               it, and the exact next steps you should take. No jargon, no black
               box, no false certainty.
@@ -112,7 +112,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-4 text-ink-600">
               Generic “this looks suspicious” warnings don’t help anyone. Every
-              Veridra result walks you through six layers of reasoning, each
+              SuSagi result walks you through six layers of reasoning, each
               grounded in the specific wording, domain pattern, or recruiter
               signal that triggered it.
             </p>
@@ -159,7 +159,7 @@ export default function LandingPage() {
             <ValueCard
               icon={<Hand className="h-5 w-5" />}
               title="No overreach"
-              body="Veridra never blocks or reports content on your behalf. It gives you clear, platform-agnostic instructions so you stay in control."
+              body="SuSagi never blocks or reports content on your behalf. It gives you clear, platform-agnostic instructions so you stay in control."
             />
           </div>
         </div>

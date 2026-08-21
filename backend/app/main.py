@@ -1,5 +1,5 @@
 """
-Veridra — FastAPI entry point.
+SuSagi — FastAPI entry point.
 
 Exposes:
     POST /api/analyze          run an analysis
@@ -37,7 +37,7 @@ ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
 
 
 app = FastAPI(
-    title="Veridra API",
+    title="SuSagi API",
     description="Public cyber safety analysis for suspicious messages, links, and job offers.",
     version="1.0.0",
 )
@@ -58,7 +58,7 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "service": "veridra"}
+    return {"status": "ok", "service": "susagi"}
 
 
 @app.post("/api/analyze", response_model=AnalysisResult)

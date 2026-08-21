@@ -162,7 +162,7 @@ export function RiskVerdictPanel({
 
       {/* ── Disclaimer ──────────────────────────────────────────── */}
       <div className="rounded-2xl border border-ink-200 bg-white p-5 text-xs leading-relaxed text-ink-500">
-        <strong className="text-ink-700">Important:</strong> Veridra is a
+        <strong className="text-ink-700">Important:</strong> SuSagi is a
         decision-support and educational tool. It does not automatically block,
         report, or take action on any content. Treat results as guidance, and
         when in doubt, verify through the sender&apos;s official channels.

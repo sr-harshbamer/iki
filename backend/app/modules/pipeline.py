@@ -63,7 +63,7 @@ def run_image_analysis(
     merge everything into one result.
 
     Returns (result, extracted_text) -- the caller shows extracted_text to
-    the user as the "analyzed content" so they can see what Veridra read.
+    the user as the "analyzed content" so they can see what SuSagi read.
     """
     extracted_text, visual_signals = analyze_image_with_llm(image_bytes, mime_type)
     qr_value, qr_signals, qr_category = decode_qr_signals(image_bytes)
@@ -82,7 +82,7 @@ def run_image_analysis(
     empty_reason = None
     if not extracted_text and not qr_value and not GEMINI_API_KEY:
         empty_reason = (
-            "Veridra could not read this image because no vision API key is "
+            "SuSagi could not read this image because no vision API key is "
             "configured yet -- ask the site operator to set GEMINI_API_KEY."
         )
 
