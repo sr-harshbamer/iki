@@ -19,10 +19,16 @@ two independent jobs:
 The extracted text is then run through the ordinary message pipeline by the
 caller (pipeline.run_image_analysis), so screenshots get the exact same
 rule-based + semantic analysis as a pasted message.
+
+The vision result is cached by a hash of the image bytes (see
+data_access.get/set_ai_cache) -- the same reasoning as llm_analysis.py:
+without it, re-analyzing an identical screenshot could come back with a
+different set of findings, and therefore a different score, each time.
 """
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import re
@@ -32,6 +38,7 @@ import cv2
 import httpx
 import numpy as np
 
+from .data_access import get_ai_cache, set_ai_cache
 from .link_analysis import analyze_link
 from .schemas import Severity, Signal, ThreatCategory
 
@@ -92,11 +99,24 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")[:40] or "finding"
 
 
+def _cache_key(image_bytes: bytes, mime_type: str) -> str:
+    digest = hashlib.sha256(image_bytes).hexdigest()
+    return f"vision:{mime_type}:{digest}"
+
+
 def analyze_image_with_llm(image_bytes: bytes, mime_type: str) -> Tuple[str, List[Signal]]:
     """Vision LLM pass: returns (extracted_text, visual_signals). Returns
-    ("", []) on any failure or when no Gemini key is configured."""
+    ("", []) on any failure or when no Gemini key is configured. Identical
+    image bytes are served from cache after the first call, so results are
+    stable across repeat analyses of the same screenshot."""
     if not GEMINI_API_KEY:
         return "", []
+
+    key = _cache_key(image_bytes, mime_type)
+    cached = get_ai_cache(key)
+    if cached is not None:
+        data = json.loads(cached)
+        return data["extracted_text"], [Signal(**d) for d in data["signals"]]
 
     try:
         b64 = base64.b64encode(image_bytes).decode("ascii")
@@ -113,7 +133,7 @@ def analyze_image_with_llm(image_bytes: bytes, mime_type: str) -> Tuple[str, Lis
                 "generationConfig": {
                     "response_mime_type": "application/json",
                     "response_schema": _RESPONSE_SCHEMA,
-                    "temperature": 0.1,
+                    "temperature": 0,
                 },
             },
             # Gemini's reasoning models "think" before answering, especially
@@ -143,6 +163,11 @@ def analyze_image_with_llm(image_bytes: bytes, mime_type: str) -> Tuple[str, Lis
             evidence=evidence,
             category_hint=None,
         ))
+
+    set_ai_cache(key, json.dumps({
+        "extracted_text": extracted_text,
+        "signals": [s.model_dump(mode="json") for s in signals],
+    }))
     return extracted_text, signals
 
 

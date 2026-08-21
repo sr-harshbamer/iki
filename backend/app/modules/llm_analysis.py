@@ -12,9 +12,16 @@ produce, so they merge into the existing scoring/explanation pipeline without
 any changes to that code. This layer is strictly additive: any failure (no
 API key, network error, malformed response) degrades to zero signals rather
 than breaking the analysis.
+
+Results are cached by a hash of the exact input (see data_access.get/set_ai_
+cache) -- LLMs are not perfectly deterministic even at low temperature, so
+without this, re-analyzing identical content could return a different set of
+findings, and therefore a different score, each time. The cache makes
+repeat analysis of the same content stable.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -22,6 +29,7 @@ from typing import List
 
 import httpx
 
+from .data_access import get_ai_cache, set_ai_cache
 from .schemas import AnalysisMode, Severity, Signal
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
@@ -61,11 +69,22 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")[:40] or "finding"
 
 
+def _cache_key(content: str, mode: AnalysisMode) -> str:
+    return "llm:" + hashlib.sha256(f"{mode.value}:{content}".encode("utf-8")).hexdigest()
+
+
 def analyze_with_llm(content: str, mode: AnalysisMode) -> List[Signal]:
     """Call Groq for semantic red flags. Returns [] on any failure or when
-    no API key is configured -- this layer must never break the pipeline."""
+    no API key is configured -- this layer must never break the pipeline.
+    Identical (content, mode) pairs are served from cache after the first
+    call, so results are stable across repeat analyses."""
     if not GROQ_API_KEY:
         return []
+
+    key = _cache_key(content, mode)
+    cached = get_ai_cache(key)
+    if cached is not None:
+        return [Signal(**d) for d in json.loads(cached)]
 
     try:
         resp = httpx.post(
@@ -77,7 +96,7 @@ def analyze_with_llm(content: str, mode: AnalysisMode) -> List[Signal]:
                     {"role": "user", "content": _PROMPT_TEMPLATE.format(mode=mode.value, content=content[:6000])}
                 ],
                 "response_format": {"type": "json_object"},
-                "temperature": 0.1,
+                "temperature": 0,
             },
             timeout=8.0,
         )
@@ -101,4 +120,6 @@ def analyze_with_llm(content: str, mode: AnalysisMode) -> List[Signal]:
             evidence=evidence,
             category_hint=None,
         ))
+
+    set_ai_cache(key, json.dumps([s.model_dump(mode="json") for s in signals]))
     return signals

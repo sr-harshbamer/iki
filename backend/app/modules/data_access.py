@@ -17,7 +17,7 @@ from typing import Iterator, List, Optional
 from .schemas import AnalysisResult
 
 
-DB_PATH = Path(__file__).resolve().parent.parent.parent / "veridra.db"
+DB_PATH = Path(__file__).resolve().parent.parent.parent / "susagi.db"
 
 
 def init_db() -> None:
@@ -55,6 +55,12 @@ def init_db() -> None:
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_escalations_created_at ON escalations(created_at);
+
+        CREATE TABLE IF NOT EXISTS ai_cache (
+            cache_key TEXT PRIMARY KEY,
+            result_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
         """)
 
 
@@ -206,6 +212,27 @@ def log_escalation(content_preview: str, result: AnalysisResult, notified_webhoo
                 1 if notified_webhook else 0,
                 datetime.utcnow().isoformat(timespec="seconds") + "Z",
             ),
+        )
+
+
+def get_ai_cache(cache_key: str) -> Optional[str]:
+    """Return the cached JSON result for this key, or None on a miss."""
+    with _conn() as cx:
+        row = cx.execute(
+            "SELECT result_json FROM ai_cache WHERE cache_key = ?", (cache_key,)
+        ).fetchone()
+    return row["result_json"] if row else None
+
+
+def set_ai_cache(cache_key: str, result_json: str) -> None:
+    """Store a JSON result, keyed by a hash of the exact input that produced
+    it -- so identical input always returns the identical AI findings
+    instead of a fresh, potentially different LLM call each time."""
+    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    with _conn() as cx:
+        cx.execute(
+            "INSERT OR REPLACE INTO ai_cache (cache_key, result_json, created_at) VALUES (?, ?, ?)",
+            (cache_key, result_json, now),
         )
 
 
