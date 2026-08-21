@@ -3,12 +3,13 @@
 import { ContentInput } from "@/components/ContentInput";
 import { ImageInput } from "@/components/ImageInput";
 import { ModeTabs } from "@/components/ModeTabs";
+import { isQrScanSupported, QrCameraScanner } from "@/components/QrCameraScanner";
 import { QrStopScreen } from "@/components/QrStopScreen";
 import { RiskVerdictPanel } from "@/components/RiskVerdictPanel";
-import { analyze, analyzeImage } from "@/lib/api";
+import { analyze, analyzeImage, analyzeQr } from "@/lib/api";
 import { ATTACK_SCENARIOS, type AttackScenario } from "@/lib/scenarios";
 import type { AnalysisMode, AnalysisResult } from "@/lib/types";
-import { AlertCircle, Loader2, Search } from "lucide-react";
+import { AlertCircle, Loader2, QrCode, Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
@@ -32,7 +33,15 @@ function AnalyzePageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [qrStopAcknowledged, setQrStopAcknowledged] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [qrScanSupported, setQrScanSupported] = useState(false);
   const resultRef = useRef<HTMLDivElement | null>(null);
+
+  // Feature-detected client-side only -- checking at render time would read
+  // `window` during SSR and mismatch on hydration.
+  useEffect(() => {
+    setQrScanSupported(isQrScanSupported());
+  }, []);
 
   // Clear result when the user switches modes — a result from a different mode
   // would be misleading.
@@ -95,6 +104,31 @@ function AnalyzePageContent() {
 
   const isImageMode = mode === "image";
   const canSubmit = isImageMode ? imageFile !== null : content.trim().length > 0;
+
+  // Live camera path: the browser already decoded the QR before this fires,
+  // so this skips straight to scoring -- no upload, no OCR, no waiting.
+  const handleQrDetected = useCallback(
+    async (qrContent: string) => {
+      setShowScanner(false);
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await analyzeQr(qrContent, senderId);
+        setResult(res.result);
+        setAnalyzedContent(res.extracted_text);
+        requestAnimationFrame(() => {
+          resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "Something went wrong. Please try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [senderId],
+  );
 
   const handleAnalyze = useCallback(async () => {
     if (isImageMode) {
@@ -166,6 +200,13 @@ function AnalyzePageContent() {
         />
       )}
 
+      {showScanner && (
+        <QrCameraScanner
+          onDetected={handleQrDetected}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
       {/* ── Header ───────────────────────────────────────────────── */}
       <section className="border-b border-ink-200 bg-white">
         <div className="container-wide py-12 sm:py-16">
@@ -188,11 +229,24 @@ function AnalyzePageContent() {
 
           <div className="card p-6 sm:p-8">
             {isImageMode ? (
-              <ImageInput
-                file={imageFile}
-                onChange={setImageFile}
-                disabled={loading}
-              />
+              <div className="space-y-3">
+                {qrScanSupported && (
+                  <button
+                    type="button"
+                    onClick={() => setShowScanner(true)}
+                    disabled={loading}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100 disabled:opacity-50"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    Scan a QR code with your camera
+                  </button>
+                )}
+                <ImageInput
+                  file={imageFile}
+                  onChange={setImageFile}
+                  disabled={loading}
+                />
+              </div>
             ) : (
               <ContentInput
                 mode={mode}
