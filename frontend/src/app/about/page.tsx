@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import { CornerDots, SectionRule } from "@/components/CornerDots";
 
 export default function AboutPage() {
   return (
@@ -69,7 +70,8 @@ export default function AboutPage() {
             </h2>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="relative mt-10 grid overflow-hidden rounded-2xl border border-ink-800 md:grid-cols-3 md:divide-x md:divide-ink-800">
+            <CornerDots />
             <MethodCard
               id="phishing"
               icon={<Microscope className="h-5 w-5" />}
@@ -107,39 +109,43 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <ol className="mt-10 grid gap-4 md:grid-cols-2">
+          <div className="mt-10">
+            <SectionRule />
+          </div>
+          <ol className="relative mt-6 grid overflow-hidden rounded-2xl border border-ink-800 sm:grid-cols-2 sm:divide-x sm:divide-ink-800 lg:grid-cols-3">
+            <CornerDots />
             <LayerCard
-              n={1}
+              n="01"
               icon={<Gauge className="h-4 w-4" />}
               title="Risk Level"
               body="Safe, Low Risk, Suspicious, Likely Scam, or High Risk — with a 0–100 score and a confidence range."
             />
             <LayerCard
-              n={2}
+              n="02"
               icon={<ShieldAlert className="h-4 w-4" />}
               title="Threat Category"
               body="What kind of threat this looks like: phishing, OTP scam, fake job offer, suspicious link, impersonation, financial fraud, or unclassified suspicious pattern."
             />
             <LayerCard
-              n={3}
+              n="03"
               icon={<Microscope className="h-4 w-4" />}
               title="Why It Was Flagged"
               body="The exact patterns that triggered — urgency wording, brand-impersonation subdomains, recruiter fee requests, etc. — with the matched evidence shown."
             />
             <LayerCard
-              n={4}
+              n="04"
               icon={<ShieldAlert className="h-4 w-4" />}
               title="Why You Should Not Proceed"
               body="What could realistically happen if you act on the content, expressed in ordinary language."
             />
             <LayerCard
-              n={5}
+              n="05"
               icon={<ShieldCheck className="h-4 w-4" />}
               title="Recommended Safe Action"
               body="Concrete steps tailored to the threat type, including what to do if you have already acted."
             />
             <LayerCard
-              n={6}
+              n="06"
               icon={<BookOpenCheck className="h-4 w-4" />}
               title="Block & Report Guidance"
               body="Platform-agnostic steps to block the sender and report the content through the channels you already use."
@@ -240,7 +246,7 @@ function MethodCard({
   body: string;
 }) {
   return (
-    <article id={id} className="card p-6">
+    <article id={id} className="bg-ink-950/60 p-8 transition hover:bg-ink-900/40">
       <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-950 text-brand-400">
         {icon}
       </span>
@@ -256,23 +262,21 @@ function LayerCard({
   title,
   body,
 }: {
-  n: number;
+  n: string;
   icon: React.ReactNode;
   title: string;
   body: string;
 }) {
   return (
-    <li className="card flex gap-4 p-5">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-600 text-sm font-semibold text-white">
+    <li className="bg-ink-950/60 p-6 transition hover:bg-ink-900/40">
+      <span className="grid h-10 w-10 place-items-center rounded-lg border border-ink-700 text-sm font-bold text-ink-50">
         {n}
       </span>
-      <div>
-        <div className="flex items-center gap-2 text-ink-200">
-          {icon}
-          <h3 className="text-base font-semibold">{title}</h3>
-        </div>
-        <p className="mt-1 text-sm leading-relaxed text-ink-400">{body}</p>
+      <div className="mt-4 flex items-center gap-2 text-brand-400">
+        {icon}
+        <h3 className="text-base font-semibold text-ink-50">{title}</h3>
       </div>
+      <p className="mt-1.5 text-sm leading-relaxed text-ink-400">{body}</p>
     </li>
   );
 }

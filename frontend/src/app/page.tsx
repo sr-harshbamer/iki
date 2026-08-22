@@ -1,8 +1,6 @@
 import Link from "next/link";
 import {
   MessageSquareWarning,
-  Link2,
-  BriefcaseBusiness,
   ShieldCheck,
   Lightbulb,
   Hand,
@@ -11,6 +9,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { AttackSimulator } from "@/components/AttackSimulator";
+import { CornerDots, SectionRule } from "@/components/CornerDots";
 import { SenderLookup } from "@/components/SenderLookup";
 import { StatsBar } from "@/components/StatsBar";
 
@@ -108,11 +107,15 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="mt-12">
+            <SectionRule />
+          </div>
+          <div className="relative mt-6 grid overflow-hidden rounded-2xl border border-ink-800 md:grid-cols-3 md:divide-x md:divide-ink-800">
+            <CornerDots />
             <ModeCard
-              icon={<MessageSquareWarning className="h-5 w-5" />}
-              title="Message Check"
-              lede="Phishing texts, OTP scams, bank impersonation, reward bait."
+              n="01"
+              tag="Message Check"
+              title="Block threats before you reply"
               bullets={[
                 "Urgency and pressure wording",
                 "Requests for OTPs, PINs, or passwords",
@@ -120,9 +123,9 @@ export default function LandingPage() {
               ]}
             />
             <ModeCard
-              icon={<Link2 className="h-5 w-5" />}
-              title="Link Check"
-              lede="Suspicious domains, shorteners, and brand lookalikes."
+              n="02"
+              tag="Link Check"
+              title="See through the destination"
               bullets={[
                 "Typosquatted brand domains",
                 "Abuse-prone TLDs and shorteners",
@@ -130,9 +133,9 @@ export default function LandingPage() {
               ]}
             />
             <ModeCard
-              icon={<BriefcaseBusiness className="h-5 w-5" />}
-              title="Job Offer Check"
-              lede="Fake recruiters, advance-fee jobs, mule-style roles."
+              n="03"
+              tag="Job Offer Check"
+              title="Catch it before you pay"
               bullets={[
                 "Upfront fees and deposits",
                 "Rushed hiring without interviews",
@@ -246,29 +249,27 @@ export default function LandingPage() {
 /* ─────────────────────────────────────────────────────────── */
 
 function ModeCard({
-  icon,
+  n,
+  tag,
   title,
-  lede,
   bullets,
 }: {
-  icon: React.ReactNode;
+  n: string;
+  tag: string;
   title: string;
-  lede: string;
   bullets: string[];
 }) {
   return (
-    <article className="card group p-6 transition hover:border-ink-700">
-      <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-950 text-brand-400">
-          {icon}
-        </span>
-        <h3 className="text-lg font-semibold text-ink-50">{title}</h3>
-      </div>
-      <p className="mt-4 text-sm text-ink-300">{lede}</p>
-      <ul className="mt-4 space-y-2 text-sm text-ink-300">
+    <article className="bg-ink-950/60 p-8 transition hover:bg-ink-900/40">
+      <span className="grid h-11 w-11 place-items-center rounded-lg border border-ink-700 text-lg font-bold text-ink-50">
+        {n}
+      </span>
+      <div className="mt-6 text-xs font-medium text-brand-400">{tag}</div>
+      <h3 className="mt-1 text-xl font-semibold text-ink-50">{title}</h3>
+      <ul className="mt-4 space-y-2 text-sm text-ink-400">
         {bullets.map((b) => (
           <li key={b} className="flex gap-2">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
+            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-ink-600" />
             <span>{b}</span>
           </li>
         ))}
@@ -300,6 +301,7 @@ function ValueCard({
 function HeroPreview() {
   return (
     <div className="relative rounded-3xl border border-ink-800 bg-ink-900/70 p-5 shadow-card backdrop-blur">
+      <CornerDots />
       <div className="flex items-center justify-between">
         <span className="chip">
           <MessageSquareWarning className="h-3.5 w-3.5 text-brand-400" />
