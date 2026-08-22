@@ -6,40 +6,40 @@ export function riskTheme(level: RiskLevel) {
       return {
         label: "Safe",
         accent: "text-severity-safe",
-        bg: "bg-emerald-50",
-        ring: "ring-emerald-200",
+        bg: "bg-emerald-950/30",
+        ring: "ring-emerald-800/60",
         bar: "text-severity-safe",
-        chip: "bg-emerald-50 text-emerald-800 border-emerald-200",
+        chip: "bg-emerald-950/50 text-emerald-300 border-emerald-800",
         headline: "No red flags detected",
       };
     case "Low Risk":
       return {
         label: "Low Risk",
         accent: "text-severity-low",
-        bg: "bg-lime-50",
-        ring: "ring-lime-200",
+        bg: "bg-lime-950/30",
+        ring: "ring-lime-800/60",
         bar: "text-severity-low",
-        chip: "bg-lime-50 text-lime-800 border-lime-200",
+        chip: "bg-lime-950/50 text-lime-300 border-lime-800",
         headline: "Low-risk indicators present",
       };
     case "Suspicious":
       return {
         label: "Suspicious",
         accent: "text-severity-suspicious",
-        bg: "bg-amber-50",
-        ring: "ring-amber-200",
+        bg: "bg-amber-950/30",
+        ring: "ring-amber-800/60",
         bar: "text-severity-suspicious",
-        chip: "bg-amber-50 text-amber-900 border-amber-200",
+        chip: "bg-amber-950/50 text-amber-300 border-amber-800",
         headline: "Proceed with caution",
       };
     case "Likely Scam":
       return {
         label: "Likely Scam",
         accent: "text-severity-scam",
-        bg: "bg-red-50",
-        ring: "ring-red-200",
+        bg: "bg-red-950/30",
+        ring: "ring-red-800/60",
         bar: "text-severity-scam",
-        chip: "bg-red-50 text-red-800 border-red-200",
+        chip: "bg-red-950/50 text-red-300 border-red-800",
         headline: "Strong scam indicators",
       };
     case "High Risk":
@@ -47,10 +47,10 @@ export function riskTheme(level: RiskLevel) {
       return {
         label: "High Risk",
         accent: "text-severity-high",
-        bg: "bg-red-100",
-        ring: "ring-red-300",
+        bg: "bg-red-950/50",
+        ring: "ring-red-700",
         bar: "text-severity-high",
-        chip: "bg-red-100 text-red-900 border-red-300",
+        chip: "bg-red-900/60 text-red-200 border-red-700",
         headline: "Do not engage",
       };
   }
@@ -59,14 +59,14 @@ export function riskTheme(level: RiskLevel) {
 export function severityTheme(s: Severity) {
   switch (s) {
     case "low":
-      return { dot: "bg-lime-500", text: "text-lime-800", label: "Low" };
+      return { dot: "bg-lime-500", text: "text-lime-300", label: "Low" };
     case "medium":
-      return { dot: "bg-amber-500", text: "text-amber-800", label: "Medium" };
+      return { dot: "bg-amber-500", text: "text-amber-300", label: "Medium" };
     case "high":
-      return { dot: "bg-red-500", text: "text-red-800", label: "High" };
+      return { dot: "bg-red-500", text: "text-red-300", label: "High" };
     case "critical":
     default:
-      return { dot: "bg-red-700", text: "text-red-900", label: "Critical" };
+      return { dot: "bg-red-600", text: "text-red-200", label: "Critical" };
   }
 }
 

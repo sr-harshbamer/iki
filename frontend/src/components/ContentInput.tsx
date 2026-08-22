@@ -85,7 +85,7 @@ export function ContentInput({
   return (
     <div className="space-y-3">
       <label className="flex items-center justify-between">
-        <span className="text-sm font-medium text-ink-800">
+        <span className="text-sm font-medium text-ink-200">
           Content to analyze
         </span>
         <span
@@ -132,7 +132,7 @@ export function ContentInput({
             key={s.label}
             type="button"
             onClick={() => onChange(s.value)}
-            className="chip transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
+            className="chip transition hover:border-brand-700 hover:bg-brand-950 hover:text-brand-300"
             disabled={disabled}
           >
             {s.label}

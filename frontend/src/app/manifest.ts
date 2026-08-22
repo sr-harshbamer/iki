@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
       "Evaluate suspicious messages, links, job offers, and screenshots with clear, evidence-based reasoning and safe-action guidance.",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
+    background_color: "#0a0c1a",
     theme_color: "#1e5f66",
     orientation: "portrait-primary",
     icons: [

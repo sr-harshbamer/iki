@@ -41,14 +41,14 @@ export function ImageInput({
   return (
     <div className="space-y-3">
       <label className="flex items-center justify-between">
-        <span className="text-sm font-medium text-ink-800">
+        <span className="text-sm font-medium text-ink-200">
           Screenshot to analyze
         </span>
         <span className="text-xs text-ink-400">PNG, JPEG, or WebP — max 5MB</span>
       </label>
 
       {file && previewUrl ? (
-        <div className="relative overflow-hidden rounded-xl border border-ink-200 bg-ink-50">
+        <div className="relative overflow-hidden rounded-xl border border-ink-800 bg-ink-950">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
@@ -59,7 +59,7 @@ export function ImageInput({
             type="button"
             onClick={() => onChange(null)}
             disabled={disabled}
-            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-ink-900/80 text-white transition hover:bg-ink-900"
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
             aria-label="Remove image"
           >
             <X className="h-4 w-4" />
@@ -86,14 +86,14 @@ export function ImageInput({
           className={cn(
             "flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center transition",
             dragOver
-              ? "border-brand-400 bg-brand-50"
-              : "border-ink-200 bg-white hover:border-brand-300 hover:bg-brand-50/40",
+              ? "border-brand-500 bg-brand-950/40"
+              : "border-ink-700 bg-ink-900/40 hover:border-brand-700 hover:bg-brand-950/30",
           )}
         >
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-brand-50 text-brand-700">
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-brand-950 text-brand-400">
             <ImagePlus className="h-5 w-5" />
           </span>
-          <p className="text-sm font-medium text-ink-800">
+          <p className="text-sm font-medium text-ink-200">
             Click to upload or drag a screenshot here
           </p>
           <p className="text-xs text-ink-500">

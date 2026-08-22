@@ -35,6 +35,7 @@ module.exports = {
           700: "#1e5f66",
           800: "#1b4b52",
           900: "#183e44",
+          950: "#0f272b",
         },
         // Severity scale
         severity: {
@@ -50,13 +51,17 @@ module.exports = {
         display: ["ui-sans-serif", "system-ui", "Inter", "sans-serif"],
       },
       boxShadow: {
-        soft: "0 1px 2px rgba(10,12,26,0.04), 0 4px 14px rgba(10,12,26,0.06)",
-        card: "0 1px 2px rgba(10,12,26,0.05), 0 8px 24px rgba(10,12,26,0.08)",
-        ring: "0 0 0 1px rgba(10,12,26,0.06)",
+        // Dark theme: a drop shadow is invisible against a near-black page,
+        // so "elevation" comes from a faint light ring instead, plus an
+        // optional brand-colored glow for the elements that should pop.
+        soft: "0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
+        card: "0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05)",
+        ring: "0 0 0 1px rgba(255,255,255,0.06)",
+        glow: "0 0 40px rgba(47,149,149,0.25)",
       },
       backgroundImage: {
         "hero-grid":
-          "radial-gradient(circle at 1px 1px, rgba(20,23,42,0.06) 1px, transparent 0)",
+          "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0)",
       },
     },
   },

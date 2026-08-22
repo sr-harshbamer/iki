@@ -26,7 +26,7 @@ export function SiteHeader() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-200/80 bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-ink-800/80 bg-ink-950/80 backdrop-blur">
       <div className="container-wide flex h-16 items-center justify-between gap-2">
         <Link href="/" aria-label="SuSagi home" className="shrink-0">
           <Logo compact className="sm:hidden" />
@@ -52,14 +52,14 @@ export function SiteHeader() {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label={open ? "Close menu" : "Open menu"}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-ink-700 hover:bg-ink-100 sm:hidden"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-ink-300 hover:bg-ink-900 sm:hidden"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
       {open && (
-        <nav className="border-t border-ink-200 bg-white px-4 py-3 sm:hidden">
+        <nav className="border-t border-ink-800 bg-ink-950 px-4 py-3 sm:hidden">
           <div className="flex flex-col gap-1">
             {links.map((l) => (
               <NavLink
@@ -99,8 +99,8 @@ function NavLink({
         "shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition",
         block && "block w-full py-2.5 text-[15px]",
         active
-          ? "bg-ink-100 text-ink-900"
-          : "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
+          ? "bg-ink-900 text-ink-50"
+          : "text-ink-400 hover:bg-ink-900 hover:text-ink-50",
       )}
     >
       {label}

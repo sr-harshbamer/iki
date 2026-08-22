@@ -27,14 +27,14 @@ const SCRIPTED_ATTACK = [
 function decisionTheme(level: DecisionRiskLevel) {
   switch (level) {
     case "Low":
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-emerald-800/60 bg-emerald-950/30 text-emerald-300";
     case "Moderate":
-      return "border-amber-200 bg-amber-50 text-amber-900";
+      return "border-amber-800/60 bg-amber-950/30 text-amber-300";
     case "High":
-      return "border-red-200 bg-red-50 text-red-800";
+      return "border-red-800/60 bg-red-950/30 text-red-300";
     case "Critical":
     default:
-      return "border-red-300 bg-red-100 text-red-900";
+      return "border-red-700 bg-red-950/50 text-red-200";
   }
 }
 
@@ -62,13 +62,13 @@ export default function LiveGuardPage() {
 
   return (
     <>
-      <section className="border-b border-ink-200 bg-white">
+      <section className="border-b border-ink-800 bg-ink-950">
         <div className="container-wide py-10 sm:py-14">
           <span className="eyebrow">Live monitoring, not a checker</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-50 sm:text-4xl">
             Live Guard
           </h1>
-          <p className="mt-3 max-w-2xl text-ink-600">
+          <p className="mt-3 max-w-2xl text-ink-300">
             This page doesn&apos;t have an &ldquo;Analyze&rdquo; button. Send messages
             one at a time — like they&apos;re arriving in a real conversation — and
             watch SuSagi react to each one on its own, live, over a persistent
@@ -77,11 +77,11 @@ export default function LiveGuardPage() {
           </p>
           <div className="mt-4 flex items-center gap-2 text-sm">
             {live.connected ? (
-              <span className="inline-flex items-center gap-1.5 text-emerald-700">
+              <span className="inline-flex items-center gap-1.5 text-emerald-400">
                 <Wifi className="h-4 w-4" /> Live connection open
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-ink-400">
+              <span className="inline-flex items-center gap-1.5 text-ink-500">
                 <WifiOff className="h-4 w-4" /> Connecting…
               </span>
             )}
@@ -89,14 +89,14 @@ export default function LiveGuardPage() {
         </div>
       </section>
 
-      <section className="bg-ink-50 py-10">
+      <section className="bg-black/20 py-10">
         <div className="container-wide grid gap-6 lg:grid-cols-5">
           {/* ── Conversation ─────────────────────────────────────── */}
           <div className="card flex flex-col p-6 lg:col-span-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-base font-semibold text-ink-900">Conversation</h2>
-                <p className="text-xs text-ink-500">
+                <h2 className="text-base font-semibold text-ink-50">Conversation</h2>
+                <p className="text-xs text-ink-400">
                   Type a message and press Enter to simulate it arriving
                 </p>
               </div>
@@ -125,16 +125,16 @@ export default function LiveGuardPage() {
               </div>
             </div>
 
-            <div className="mt-4 flex min-h-[280px] flex-1 flex-col gap-2 overflow-y-auto rounded-xl bg-ink-50 p-4">
+            <div className="mt-4 flex min-h-[280px] flex-1 flex-col gap-2 overflow-y-auto rounded-xl bg-ink-950 p-4">
               {live.messages.length === 0 ? (
-                <p className="m-auto text-sm text-ink-400">
+                <p className="m-auto text-sm text-ink-500">
                   No messages yet — type one below or play the scripted attack.
                 </p>
               ) : (
                 live.messages.map((m) => (
                   <div
                     key={m.id}
-                    className="max-w-[85%] self-start rounded-2xl rounded-tl-sm border border-ink-200 bg-white px-4 py-2 text-sm text-ink-800 shadow-soft"
+                    className="max-w-[85%] self-start rounded-2xl rounded-tl-sm border border-ink-800 bg-ink-900 px-4 py-2 text-sm text-ink-200 shadow-soft"
                   >
                     {m.text}
                   </div>
@@ -166,7 +166,7 @@ export default function LiveGuardPage() {
           {/* ── Live risk panel ──────────────────────────────────── */}
           <div className="space-y-4 lg:col-span-2">
             {live.escalated && (
-              <div className="card flex items-start gap-3 border border-red-300 bg-red-100 p-4 text-red-900 ring-1 ring-red-300">
+              <div className="card flex items-start gap-3 border border-red-700 bg-red-950/50 p-4 text-red-200 ring-1 ring-red-700">
                 <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />
                 <div>
                   <div className="text-sm font-semibold">Protection activated</div>
@@ -178,32 +178,32 @@ export default function LiveGuardPage() {
             <div
               className={cn(
                 "card p-6 transition-colors duration-500",
-                theme ? theme.bg : "bg-white",
+                theme ? theme.bg : "",
                 theme ? "ring-1" : "",
                 theme ? theme.ring : "",
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   Live risk score
                 </span>
                 {live.semanticPending && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-ink-400">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-ink-500">
                     <Loader2 className="h-3 w-3 animate-spin" /> deeper analysis running…
                   </span>
                 )}
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-5xl font-bold tabular-nums text-ink-900 transition-all duration-500">
+                <span className="text-5xl font-bold tabular-nums text-ink-50 transition-all duration-500">
                   {live.score}
                 </span>
-                <span className="text-lg text-ink-400">/100</span>
+                <span className="text-lg text-ink-500">/100</span>
               </div>
               {live.level && (
                 <span className={cn("chip mt-3 border", theme?.chip)}>{live.level}</span>
               )}
               {live.category && live.category !== "No Clear Threat Detected" && (
-                <span className="chip ml-2 mt-3 border bg-white/80">{live.category}</span>
+                <span className="chip ml-2 mt-3 border bg-ink-950/60">{live.category}</span>
               )}
             </div>
 
@@ -234,7 +234,7 @@ export default function LiveGuardPage() {
             )}
 
             {live.attackForecast && (
-              <div className="card bg-ink-900 p-5 text-white">
+              <div className="card bg-ink-900 ring-1 ring-brand-800/50 p-5 text-white">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/60">
                   <Radar className="h-3.5 w-3.5" /> Attack forecast
                 </div>
@@ -249,14 +249,14 @@ export default function LiveGuardPage() {
 
             {live.signals.length > 0 && (
               <div className="card p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   Live signals ({live.signals.length})
                 </h3>
                 <ul className="mt-3 space-y-2">
                   {live.signals.map((s) => {
                     const st = severityTheme(s.severity);
                     return (
-                      <li key={s.id} className="flex items-center gap-2 text-sm text-ink-800">
+                      <li key={s.id} className="flex items-center gap-2 text-sm text-ink-200">
                         <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", st.dot)} />
                         {signalLabel(s.id)}
                       </li>

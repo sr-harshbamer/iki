@@ -17,7 +17,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
         </svg>
       </span>
       {!compact && (
-        <span className="text-[17px] font-semibold tracking-tight text-ink-900">
+        <span className="text-[17px] font-semibold tracking-tight text-ink-50">
           SuSagi
         </span>
       )}

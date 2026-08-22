@@ -41,14 +41,14 @@ export function SenderLookup() {
   return (
     <div className="card p-6 sm:p-7">
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-900 text-white">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
           <PhoneCall className="h-4 w-4" />
         </span>
         <div>
-          <h3 className="text-base font-semibold text-ink-900">
+          <h3 className="text-base font-semibold text-ink-50">
             Check before you answer
           </h3>
-          <p className="text-xs text-ink-500">
+          <p className="text-xs text-ink-400">
             Look up a number or handle&apos;s history before opening what it just sent you
           </p>
         </div>
@@ -84,7 +84,7 @@ export function SenderLookup() {
         <button
           type="button"
           onClick={() => setQuery("sim-dad")}
-          className="font-medium text-brand-700 underline decoration-dotted underline-offset-2"
+          className="font-medium text-brand-400 underline decoration-dotted underline-offset-2"
         >
           sim-dad
         </button>{" "}
@@ -92,7 +92,7 @@ export function SenderLookup() {
       </p>
 
       {error && (
-        <p className="mt-4 text-sm text-red-700">{error}</p>
+        <p className="mt-4 text-sm text-red-400">{error}</p>
       )}
 
       {result && <LookupResult result={result} />}
@@ -103,10 +103,10 @@ export function SenderLookup() {
 function LookupResult({ result }: { result: SenderLookupResult }) {
   if (!result.found) {
     return (
-      <div className="mt-5 flex items-start gap-3 rounded-xl border border-ink-200 bg-ink-50 p-4">
-        <ShieldQuestion className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
-        <div className="text-sm text-ink-700">
-          <span className="font-medium">No history for &ldquo;{result.sender_id}&rdquo; yet.</span>{" "}
+      <div className="mt-5 flex items-start gap-3 rounded-xl border border-ink-800 bg-ink-950/60 p-4">
+        <ShieldQuestion className="mt-0.5 h-4 w-4 shrink-0 text-ink-500" />
+        <div className="text-sm text-ink-300">
+          <span className="font-medium text-ink-100">No history for &ldquo;{result.sender_id}&rdquo; yet.</span>{" "}
           SuSagi hasn&apos;t seen a check against this tag before — that means
           unknown, not necessarily safe. Still verify independently before acting.
         </div>
@@ -119,12 +119,12 @@ function LookupResult({ result }: { result: SenderLookupResult }) {
   return (
     <div className={cn("mt-5 rounded-xl border p-4", theme.bg, theme.ring, "ring-1")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-ink-900">
+        <span className="text-sm font-semibold text-ink-50">
           &ldquo;{result.sender_id}&rdquo;
         </span>
         <span className={cn("chip border", theme.chip)}>{result.risk_level}</span>
       </div>
-      <p className="mt-2 text-sm text-ink-700">
+      <p className="mt-2 text-sm text-ink-300">
         {result.message_count} previous {result.message_count === 1 ? "check" : "checks"}{" "}
         averaged <strong>{result.avg_risk_score}/100</strong> risk.
       </p>
@@ -133,7 +133,7 @@ function LookupResult({ result }: { result: SenderLookupResult }) {
           {result.signal_ids.map((id) => (
             <span
               key={id}
-              className="rounded-full border border-ink-200 bg-white px-2.5 py-1 text-xs text-ink-700"
+              className="rounded-full border border-ink-800 bg-ink-950/60 px-2.5 py-1 text-xs text-ink-300"
             >
               {signalLabel(id)}
             </span>

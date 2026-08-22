@@ -38,7 +38,7 @@ export function HighlightedContent({
   }, [content, phrases]);
 
   return (
-    <pre className="whitespace-pre-wrap break-words font-sans text-[15px] leading-relaxed text-ink-800">
+    <pre className="whitespace-pre-wrap break-words font-sans text-[15px] leading-relaxed text-ink-200">
       {parts.map((p, i) =>
         p.highlight ? (
           <span

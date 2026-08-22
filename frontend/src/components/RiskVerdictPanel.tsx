@@ -54,26 +54,26 @@ export function RiskVerdictPanel({
         <div className="flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="chip bg-white/80">
-                <Tag className="h-3.5 w-3.5 text-brand-700" />
+              <span className="chip bg-ink-950/60">
+                <Tag className="h-3.5 w-3.5 text-brand-400" />
                 {modeLabel(result.mode)}
               </span>
               <span className={cn("chip border", theme.chip)}>
                 <VerdictIcon level={result.risk_level} />
                 {result.risk_level}
               </span>
-              <span className="chip bg-white/80">
-                <Tag className="h-3.5 w-3.5 text-ink-500" />
+              <span className="chip bg-ink-950/60">
+                <Tag className="h-3.5 w-3.5 text-ink-400" />
                 {result.threat_category}
               </span>
             </div>
             <h2
               id="verdict-heading"
-              className="mt-4 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl"
+              className="mt-4 text-2xl font-semibold tracking-tight text-ink-50 sm:text-3xl"
             >
               {theme.headline}
             </h2>
-            <p className="mt-2 text-sm text-ink-600">
+            <p className="mt-2 text-sm text-ink-300">
               Based on {result.signals.length}{" "}
               {result.signals.length === 1 ? "signal" : "signals"} detected in
               the content you provided.
@@ -89,12 +89,12 @@ export function RiskVerdictPanel({
               barClass={theme.bar}
             />
             <div className="text-sm">
-              <div className="font-medium text-ink-600">Risk score</div>
-              <div className="mt-1 text-3xl font-semibold tabular-nums text-ink-900">
+              <div className="font-medium text-ink-300">Risk score</div>
+              <div className="mt-1 text-3xl font-semibold tabular-nums text-ink-50">
                 <AnimatedScore target={result.risk_score} />
-                <span className="text-lg text-ink-400">/100</span>
+                <span className="text-lg text-ink-500">/100</span>
               </div>
-              <div className="mt-1 text-xs text-ink-600">
+              <div className="mt-1 text-xs text-ink-400">
                 Confidence {result.confidence_low}–{result.confidence_high}
               </div>
             </div>
@@ -105,7 +105,7 @@ export function RiskVerdictPanel({
       {/* ── Analyzed content with highlights ─────────────────────── */}
       <div className="card p-6 sm:p-7">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-600">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
             Analyzed content
           </h3>
           {result.highlighted_phrases.length > 0 && (
@@ -115,7 +115,7 @@ export function RiskVerdictPanel({
             </span>
           )}
         </div>
-        <div className="mt-3 rounded-xl bg-ink-50 p-4">
+        <div className="mt-3 rounded-xl bg-ink-950 p-4">
           <HighlightedContent
             content={content}
             phrases={result.highlighted_phrases}
@@ -175,8 +175,8 @@ export function RiskVerdictPanel({
       </div>
 
       {/* ── Disclaimer ──────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-ink-200 bg-white p-5 text-xs leading-relaxed text-ink-500">
-        <strong className="text-ink-700">Important:</strong> SuSagi is a
+      <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5 text-xs leading-relaxed text-ink-500">
+        <strong className="text-ink-300">Important:</strong> SuSagi is a
         decision-support and educational tool. It does not automatically block,
         report, or take action on any content. Treat results as guidance, and
         when in doubt, verify through the sender&apos;s official channels.
@@ -283,7 +283,7 @@ function ScoreDial({
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="rgb(226 228 235)"
+        stroke="rgba(255,255,255,0.08)"
         strokeWidth={stroke}
         fill="none"
       />
@@ -292,7 +292,7 @@ function ScoreDial({
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        className={cn(barClass, "opacity-25")}
+        className={cn(barClass, "opacity-30")}
         stroke="currentColor"
         strokeWidth={stroke}
         strokeDasharray={circumference}
@@ -305,7 +305,7 @@ function ScoreDial({
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="rgb(226 228 235)"
+        stroke="rgba(255,255,255,0.08)"
         strokeWidth={stroke}
         strokeDasharray={circumference}
         strokeDashoffset={lowOffset}
@@ -341,14 +341,14 @@ function SignalList({ result }: { result: AnalysisResult }) {
   return (
     <div className="card p-6 sm:p-7">
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-900 text-white">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
           <ListChecks className="h-4 w-4" />
         </span>
         <div>
-          <h3 className="text-base font-semibold text-ink-900">
+          <h3 className="text-base font-semibold text-ink-50">
             Detected signals
           </h3>
-          <p className="text-xs text-ink-500">
+          <p className="text-xs text-ink-400">
             Each signal below triggered on the specific evidence shown.
           </p>
         </div>
@@ -360,13 +360,13 @@ function SignalList({ result }: { result: AnalysisResult }) {
           return (
             <li
               key={s.id}
-              className="rounded-xl border border-ink-200 bg-white p-4 transition hover:border-ink-300"
+              className="rounded-xl border border-ink-800 bg-ink-950/60 p-4 transition hover:border-ink-700"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className={cn("h-2 w-2 shrink-0 rounded-full", st.dot)} />
-                    <span className="text-sm font-semibold text-ink-900">
+                    <span className="text-sm font-semibold text-ink-50">
                       {s.label}
                     </span>
                   </div>
@@ -375,7 +375,7 @@ function SignalList({ result }: { result: AnalysisResult }) {
                       {s.evidence.map((ev, i) => (
                         <code
                           key={i}
-                          className="rounded bg-ink-100 px-1.5 py-0.5 font-mono text-[12px] text-ink-800"
+                          className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-[12px] text-ink-300"
                         >
                           {ev}
                         </code>
@@ -388,8 +388,8 @@ function SignalList({ result }: { result: AnalysisResult }) {
                     "shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide",
                     s.severity === "critical" && "border-red-700 bg-red-700 text-white",
                     s.severity === "high" && "border-red-600 bg-red-600 text-white",
-                    s.severity === "medium" && "border-amber-300 bg-amber-100 text-amber-900",
-                    s.severity === "low" && "border-lime-300 bg-lime-100 text-lime-900",
+                    s.severity === "medium" && "border-amber-700 bg-amber-900/60 text-amber-200",
+                    s.severity === "low" && "border-lime-700 bg-lime-900/60 text-lime-200",
                   )}
                 >
                   {st.label}
@@ -406,14 +406,14 @@ function SignalList({ result }: { result: AnalysisResult }) {
 function decisionRiskTheme(level: DecisionRiskLevel) {
   switch (level) {
     case "Low":
-      return { bg: "bg-emerald-50", ring: "ring-emerald-200", text: "text-emerald-800", chip: "bg-emerald-50 text-emerald-800 border-emerald-200" };
+      return { bg: "bg-emerald-950/30", ring: "ring-emerald-800/60", text: "text-emerald-300", chip: "bg-emerald-950/50 text-emerald-300 border-emerald-800" };
     case "Moderate":
-      return { bg: "bg-amber-50", ring: "ring-amber-200", text: "text-amber-900", chip: "bg-amber-50 text-amber-900 border-amber-200" };
+      return { bg: "bg-amber-950/30", ring: "ring-amber-800/60", text: "text-amber-300", chip: "bg-amber-950/50 text-amber-300 border-amber-800" };
     case "High":
-      return { bg: "bg-red-50", ring: "ring-red-200", text: "text-red-800", chip: "bg-red-50 text-red-800 border-red-200" };
+      return { bg: "bg-red-950/30", ring: "ring-red-800/60", text: "text-red-300", chip: "bg-red-950/50 text-red-300 border-red-800" };
     case "Critical":
     default:
-      return { bg: "bg-red-100", ring: "ring-red-300", text: "text-red-900", chip: "bg-red-100 text-red-900 border-red-300" };
+      return { bg: "bg-red-950/50", ring: "ring-red-700", text: "text-red-200", chip: "bg-red-900/60 text-red-200 border-red-700" };
   }
 }
 
@@ -435,12 +435,12 @@ function DecisionRiskCard({
       <div className="p-6 sm:p-7">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-900 text-white">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
               <Gauge className="h-4 w-4" />
             </span>
             <div>
-              <h3 className="text-base font-semibold text-ink-900">Decision risk</h3>
-              <p className="text-xs text-ink-500">
+              <h3 className="text-base font-semibold text-ink-50">Decision risk</h3>
+              <p className="text-xs text-ink-400">
                 How dangerous is the specific action being pressured, not just the message
               </p>
             </div>
@@ -451,28 +451,28 @@ function DecisionRiskCard({
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-xl border border-ink-200 bg-white p-3">
-            <div className="text-xl font-semibold tabular-nums text-ink-900">
+          <div className="rounded-xl border border-ink-800 bg-ink-950/60 p-3">
+            <div className="text-xl font-semibold tabular-nums text-ink-50">
               {decisionRisk.scam_probability}%
             </div>
-            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-600">
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
               Scam probability
             </div>
           </div>
-          <div className="rounded-xl border border-ink-200 bg-white p-3">
-            <div className="text-xl font-semibold text-ink-900">
+          <div className="rounded-xl border border-ink-800 bg-ink-950/60 p-3">
+            <div className="text-xl font-semibold text-ink-50">
               {decisionRisk.potential_consequence}
             </div>
-            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-600">
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
               Potential loss
             </div>
           </div>
-          <div className="rounded-xl border border-ink-200 bg-white p-3">
-            <div className="flex items-center justify-center gap-1 text-xl font-semibold tabular-nums text-ink-900">
-              <Undo2 className="h-3.5 w-3.5 text-ink-400" />
+          <div className="rounded-xl border border-ink-800 bg-ink-950/60 p-3">
+            <div className="flex items-center justify-center gap-1 text-xl font-semibold tabular-nums text-ink-50">
+              <Undo2 className="h-3.5 w-3.5 text-ink-500" />
               {decisionRisk.reversibility_score}
             </div>
-            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-600">
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
               Reversibility
             </div>
           </div>
@@ -499,7 +499,7 @@ function AttackForecastCard({
   forecast: NonNullable<AnalysisResult["attack_forecast"]>;
 }) {
   return (
-    <div className="card overflow-hidden bg-ink-900 text-white">
+    <div className="card overflow-hidden bg-ink-900 ring-1 ring-brand-800/50 text-white">
       <div className="p-6 sm:p-7">
         <div className="flex items-center gap-3">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10">
@@ -554,10 +554,10 @@ function ExplanationCard({
   tone: "warn" | "danger" | "safe" | "neutral";
 }) {
   const toneStyles = {
-    warn: "bg-amber-50 text-amber-900 border-amber-200",
-    danger: "bg-red-50 text-red-900 border-red-200",
-    safe: "bg-emerald-50 text-emerald-900 border-emerald-200",
-    neutral: "bg-ink-900 text-white border-ink-900",
+    warn: "bg-amber-950/40 text-amber-300 border-amber-800",
+    danger: "bg-red-950/40 text-red-300 border-red-800",
+    safe: "bg-emerald-950/40 text-emerald-300 border-emerald-800",
+    neutral: "bg-brand-950/60 text-brand-300 border-brand-800",
   }[tone];
 
   return (
@@ -572,14 +572,14 @@ function ExplanationCard({
           {icon}
         </span>
         <div>
-          <h3 className="text-base font-semibold text-ink-900">{title}</h3>
-          <p className="text-xs text-ink-500">{subtitle}</p>
+          <h3 className="text-base font-semibold text-ink-50">{title}</h3>
+          <p className="text-xs text-ink-400">{subtitle}</p>
         </div>
       </div>
-      <ul className="mt-5 space-y-3.5 text-[15px] leading-relaxed text-ink-700">
+      <ul className="mt-5 space-y-3.5 text-[15px] leading-relaxed text-ink-300">
         {items.map((item, i) => (
           <li key={i} className="flex gap-3">
-            <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-400" />
+            <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-600" />
             <span>{item}</span>
           </li>
         ))}

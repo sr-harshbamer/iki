@@ -47,7 +47,7 @@ export function ModeTabs({
     <div
       role="tablist"
       aria-label="Select analysis mode"
-      className="grid grid-cols-1 gap-2 rounded-2xl border border-ink-200 bg-white p-2 shadow-soft sm:grid-cols-2 lg:grid-cols-4"
+      className="grid grid-cols-1 gap-2 rounded-2xl border border-ink-800 bg-ink-900/60 p-2 shadow-soft sm:grid-cols-2 lg:grid-cols-4"
     >
       {TABS.map((t) => {
         const active = value === t.id;
@@ -60,14 +60,14 @@ export function ModeTabs({
             className={cn(
               "group flex items-center gap-3 rounded-xl px-4 py-3 text-left transition",
               active
-                ? "bg-ink-900 text-white shadow-soft"
-                : "text-ink-700 hover:bg-ink-50",
+                ? "bg-brand-600 text-white shadow-glow"
+                : "text-ink-300 hover:bg-ink-800",
             )}
           >
             <span
               className={cn(
                 "grid h-9 w-9 shrink-0 place-items-center rounded-lg",
-                active ? "bg-white/10 text-white" : "bg-brand-50 text-brand-700",
+                active ? "bg-white/15 text-white" : "bg-brand-950 text-brand-400",
               )}
             >
               {t.icon}

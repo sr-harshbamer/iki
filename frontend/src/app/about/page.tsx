@@ -14,13 +14,13 @@ export default function AboutPage() {
   return (
     <>
       {/* ── Header ─────────────────────────────────────────────── */}
-      <section className="border-b border-ink-200 bg-white">
+      <section className="border-b border-ink-800 bg-ink-950">
         <div className="container-wide py-14 sm:py-20">
           <span className="eyebrow">About SuSagi</span>
-          <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-ink-900 sm:text-5xl">
+          <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl">
             Everyday cyber safety, explained in plain language.
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-ink-600">
+          <p className="mt-5 max-w-2xl text-lg text-ink-300">
             SuSagi helps ordinary people evaluate suspicious messages, links,
             and job offers with the same kind of reasoning a careful security
             professional would apply — without the jargon, the guesswork, or
@@ -30,16 +30,16 @@ export default function AboutPage() {
       </section>
 
       {/* ── Motivation ─────────────────────────────────────────── */}
-      <section className="bg-white py-16">
+      <section className="bg-ink-950 py-16">
         <div className="container-wide grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
             <span className="eyebrow">Why this exists</span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-50">
               Most scams don&apos;t need sophisticated attackers — just a confused
               person on the other end.
             </h2>
           </div>
-          <div className="prose-tight space-y-5 text-ink-700 lg:col-span-7">
+          <div className="prose-tight space-y-5 text-ink-300 lg:col-span-7">
             <p>
               The majority of financial loss from digital fraud does not come
               from novel exploits. It comes from ordinary text messages, DMs,
@@ -59,11 +59,11 @@ export default function AboutPage() {
       </section>
 
       {/* ── What SuSagi analyses ──────────────────────────────── */}
-      <section className="bg-ink-50 py-16">
+      <section className="bg-black/20 py-16">
         <div className="container-wide">
           <div className="max-w-2xl">
             <span className="eyebrow">How SuSagi analyses content</span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-50">
               Each mode looks for the red flags that actually matter for that
               kind of content.
             </h2>
@@ -93,14 +93,14 @@ export default function AboutPage() {
       </section>
 
       {/* ── The six output layers ──────────────────────────────── */}
-      <section className="bg-white py-16">
+      <section className="bg-ink-950 py-16">
         <div className="container-wide">
           <div className="max-w-2xl">
             <span className="eyebrow">The six output layers</span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-50">
               A verdict alone is not enough.
             </h2>
-            <p className="mt-4 text-ink-600">
+            <p className="mt-4 text-ink-300">
               Every SuSagi analysis returns six layers, from the headline risk
               level all the way down to concrete next steps. Each layer is
               grounded in the specific evidence the analyser saw.
@@ -149,7 +149,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── Principles ──────────────────────────────────────────── */}
-      <section className="bg-ink-50 py-16">
+      <section className="bg-black/20 py-16">
         <div className="container-wide grid gap-8 lg:grid-cols-3">
           <Principle
             title="Explainability over certainty"
@@ -167,15 +167,15 @@ export default function AboutPage() {
       </section>
 
       {/* ── Who it's for ────────────────────────────────────────── */}
-      <section className="bg-white py-16">
+      <section className="bg-ink-950 py-16">
         <div className="container-wide grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <span className="eyebrow">Who it&apos;s for</span>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-50">
               Built for the person who says &quot;this feels off.&quot;
             </h2>
           </div>
-          <ul className="space-y-5 text-ink-700 lg:col-span-7">
+          <ul className="space-y-5 text-ink-300 lg:col-span-7">
             <Audience
               icon={<Users className="h-5 w-5" />}
               title="Anyone receiving suspicious messages"
@@ -196,15 +196,15 @@ export default function AboutPage() {
       </section>
 
       {/* ── Disclaimer ──────────────────────────────────────────── */}
-      <section className="bg-white pb-20">
+      <section className="bg-ink-950 pb-20">
         <div className="container-wide">
-          <div className="rounded-3xl border border-ink-200 bg-ink-50 p-8 sm:p-10">
-            <h2 className="text-lg font-semibold text-ink-900">
+          <div className="rounded-3xl border border-ink-800 bg-ink-900/40 p-8 sm:p-10">
+            <h2 className="text-lg font-semibold text-ink-50">
               Important scope and limitations
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-ink-700">
+            <p className="mt-3 text-sm leading-relaxed text-ink-300">
               SuSagi is a decision-support and educational platform. It does{" "}
-              <strong>not</strong> replace official cybersecurity authorities,
+              <strong className="text-ink-100">not</strong> replace official cybersecurity authorities,
               law-enforcement reporting channels, or your bank&apos;s fraud
               department. Results reflect heuristic analysis of the content you
               provide and should be read as a guide, not a guarantee. When
@@ -241,11 +241,11 @@ function MethodCard({
 }) {
   return (
     <article id={id} className="card p-6">
-      <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-950 text-brand-400">
         {icon}
       </span>
-      <h3 className="mt-4 text-lg font-semibold text-ink-900">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-ink-600">{body}</p>
+      <h3 className="mt-4 text-lg font-semibold text-ink-50">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-ink-300">{body}</p>
     </article>
   );
 }
@@ -263,15 +263,15 @@ function LayerCard({
 }) {
   return (
     <li className="card flex gap-4 p-5">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-ink-900 text-sm font-semibold text-white">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-600 text-sm font-semibold text-white">
         {n}
       </span>
       <div>
-        <div className="flex items-center gap-2 text-ink-800">
+        <div className="flex items-center gap-2 text-ink-200">
           {icon}
           <h3 className="text-base font-semibold">{title}</h3>
         </div>
-        <p className="mt-1 text-sm leading-relaxed text-ink-600">{body}</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-400">{body}</p>
       </div>
     </li>
   );
@@ -280,8 +280,8 @@ function LayerCard({
 function Principle({ title, body }: { title: string; body: string }) {
   return (
     <div className="card p-6">
-      <h3 className="text-lg font-semibold text-ink-900">{title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-ink-600">{body}</p>
+      <h3 className="text-lg font-semibold text-ink-50">{title}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-ink-300">{body}</p>
     </div>
   );
 }
@@ -297,12 +297,12 @@ function Audience({
 }) {
   return (
     <li className="flex gap-4">
-      <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+      <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-950 text-brand-400">
         {icon}
       </span>
       <div>
-        <h3 className="text-base font-semibold text-ink-900">{title}</h3>
-        <p className="mt-1 text-sm leading-relaxed text-ink-600">{body}</p>
+        <h3 className="text-base font-semibold text-ink-50">{title}</h3>
+        <p className="mt-1 text-sm leading-relaxed text-ink-400">{body}</p>
       </div>
     </li>
   );

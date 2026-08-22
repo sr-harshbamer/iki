@@ -39,12 +39,12 @@ export function AnalyzingSequence({ mode }: { mode: AnalysisMode }) {
 
   return (
     <div className="card flex flex-col items-center gap-6 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-brand-700">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-950 text-brand-400">
         <Loader2 className="h-5 w-5 animate-spin" />
       </span>
       <div>
-        <h2 className="text-lg font-semibold text-ink-900">Analyzing…</h2>
-        <p className="mt-1 text-sm text-ink-600">
+        <h2 className="text-lg font-semibold text-ink-50">Analyzing…</h2>
+        <p className="mt-1 text-sm text-ink-400">
           Running this through SuSagi&apos;s detection pipeline
         </p>
       </div>
@@ -61,9 +61,9 @@ export function AnalyzingSequence({ mode }: { mode: AnalysisMode }) {
               <span
                 className={cn(
                   "grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors",
-                  done && "border-brand-600 bg-brand-600 text-white",
-                  active && !done && "border-brand-400 text-brand-600",
-                  !done && !active && "border-ink-200 text-transparent",
+                  done && "border-brand-500 bg-brand-500 text-white",
+                  active && !done && "border-brand-400 text-brand-400",
+                  !done && !active && "border-ink-700 text-transparent",
                 )}
               >
                 {done ? (
@@ -80,9 +80,9 @@ export function AnalyzingSequence({ mode }: { mode: AnalysisMode }) {
               <span
                 className={cn(
                   "text-sm transition-colors",
-                  done && "text-ink-500 line-through decoration-ink-300",
-                  active && "font-medium text-ink-900",
-                  !done && !active && "text-ink-400",
+                  done && "text-ink-500 line-through decoration-ink-700",
+                  active && "font-medium text-ink-50",
+                  !done && !active && "text-ink-600",
                 )}
               >
                 {label}

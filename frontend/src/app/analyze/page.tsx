@@ -202,13 +202,13 @@ function AnalyzePageContent() {
       )}
 
       {/* ── Header ───────────────────────────────────────────────── */}
-      <section className="border-b border-ink-200 bg-white">
+      <section className="border-b border-ink-800 bg-ink-950">
         <div className="container-wide py-12 sm:py-16">
           <span className="eyebrow">Analyze</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-50 sm:text-4xl">
             Check a suspicious message, link, job offer, or screenshot
           </h1>
-          <p className="mt-3 max-w-2xl text-ink-600">
+          <p className="mt-3 max-w-2xl text-ink-300">
             Pick the mode that matches what you received, paste the content or
             upload a screenshot, and SuSagi will return a clear verdict with
             the specific red flags and next steps.
@@ -217,7 +217,7 @@ function AnalyzePageContent() {
       </section>
 
       {/* ── Input ───────────────────────────────────────────────── */}
-      <section className="bg-ink-50 py-10">
+      <section className="bg-black/20 py-10">
         <div className="container-wide space-y-6">
           <ModeTabs value={mode} onChange={setMode} />
 
@@ -229,7 +229,7 @@ function AnalyzePageContent() {
                     type="button"
                     onClick={() => setShowScanner(true)}
                     disabled={loading}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-800 bg-brand-950/50 px-4 py-3 text-sm font-semibold text-brand-300 transition hover:bg-brand-900/50 disabled:opacity-50"
                   >
                     <QrCode className="h-4 w-4" />
                     Scan a QR code with your camera
@@ -251,8 +251,8 @@ function AnalyzePageContent() {
             )}
 
             <div className="mt-5 space-y-1.5">
-              <label className="text-sm font-medium text-ink-800">
-                Sender tag <span className="font-normal text-ink-400">(optional)</span>
+              <label className="text-sm font-medium text-ink-200">
+                Sender tag <span className="font-normal text-ink-500">(optional)</span>
               </label>
               <input
                 type="text"
@@ -326,7 +326,7 @@ function AnalyzePageContent() {
       </section>
 
       {/* ── Result ──────────────────────────────────────────────── */}
-      <section ref={resultRef} className="bg-ink-50 pb-20">
+      <section ref={resultRef} className="bg-black/20 pb-20">
         <div className="container-wide">
           {loading ? (
             <AnalyzingSequence mode={mode} />
@@ -363,13 +363,13 @@ function EmptyState({ mode }: { mode: AnalysisMode }) {
 
   return (
     <div className="card flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-brand-700">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-950 text-brand-400">
         <Search className="h-5 w-5" />
       </span>
-      <h2 className="text-lg font-semibold text-ink-900">
+      <h2 className="text-lg font-semibold text-ink-50">
         Your result will appear here
       </h2>
-      <p className="max-w-md text-sm text-ink-600">
+      <p className="max-w-md text-sm text-ink-300">
         {verb} {label} above and click <span className="font-medium">Analyze content</span>.
         SuSagi returns a clear risk verdict, the exact red flags it found, and
         what to do next — usually in under a second.

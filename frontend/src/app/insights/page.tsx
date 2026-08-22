@@ -34,14 +34,14 @@ import {
 } from "recharts";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Phishing: "#dc2626",
-  "Fake Job Offer": "#b91c1c",
-  "Suspicious Link": "#d97706",
-  "OTP Scam": "#ea580c",
-  Impersonation: "#9333ea",
-  "Financial Fraud": "#0891b2",
-  "Unknown Suspicious Pattern": "#6b7280",
-  "No Clear Threat Detected": "#10a572",
+  Phishing: "#f87171",
+  "Fake Job Offer": "#fb7185",
+  "Suspicious Link": "#fbbf24",
+  "OTP Scam": "#fb923c",
+  Impersonation: "#c084fc",
+  "Financial Fraud": "#22d3ee",
+  "Unknown Suspicious Pattern": "#9ca3af",
+  "No Clear Threat Detected": "#34d399",
 };
 
 const LEVEL_ORDER: RiskLevel[] = [
@@ -86,13 +86,13 @@ export default function InsightsPage() {
   return (
     <>
       {/* ── Header ───────────────────────────────────────────────── */}
-      <section className="border-b border-ink-200 bg-white">
+      <section className="border-b border-ink-800 bg-ink-950">
         <div className="container-wide py-12 sm:py-16">
           <span className="eyebrow">Safety Insights</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-50 sm:text-4xl">
             What SuSagi is seeing across recent analyses
           </h1>
-          <p className="mt-3 max-w-2xl text-ink-600">
+          <p className="mt-3 max-w-2xl text-ink-300">
             Aggregated, privacy-minimal view of threat categories, red-flag
             patterns, and recent analysis volume — useful for spotting campaigns
             before they reach you.
@@ -100,7 +100,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section className="bg-ink-50 py-12">
+      <section className="bg-black/20 py-12">
         <div className="container-wide space-y-8">
           {error && <ErrorCard message={error} />}
 
@@ -126,24 +126,24 @@ export default function InsightsPage() {
                         <XAxis
                           dataKey="category"
                           interval={0}
-                          tick={{ fontSize: 11, fill: "#4c5366" }}
+                          tick={{ fontSize: 11, fill: "#8a91a4" }}
                           tickFormatter={(v: string) =>
                             v.length > 16 ? v.slice(0, 14) + "…" : v
                           }
                         />
                         <YAxis
                           allowDecimals={false}
-                          tick={{ fontSize: 11, fill: "#4c5366" }}
+                          tick={{ fontSize: 11, fill: "#8a91a4" }}
                         />
                         <Tooltip
                           contentStyle={tooltipStyle}
-                          cursor={{ fill: "rgba(20,23,42,0.04)" }}
+                          cursor={{ fill: "rgba(255,255,255,0.04)" }}
                         />
                         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                           {insights.by_category.map((row) => (
                             <Cell
                               key={row.category}
-                              fill={CATEGORY_COLORS[row.category] ?? "#2f9595"}
+                              fill={CATEGORY_COLORS[row.category] ?? "#4bb2b0"}
                             />
                           ))}
                         </Bar>
@@ -177,7 +177,7 @@ export default function InsightsPage() {
                             <Cell
                               key={row.level}
                               fill={levelColor(row.level as RiskLevel)}
-                              stroke="white"
+                              stroke="#0a0c1a"
                               strokeWidth={2}
                             />
                           ))}
@@ -186,7 +186,7 @@ export default function InsightsPage() {
                         <Legend
                           verticalAlign="bottom"
                           iconType="circle"
-                          wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                          wrapperStyle={{ fontSize: 12, paddingTop: 8, color: "#b3b8c6" }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -214,24 +214,24 @@ export default function InsightsPage() {
                       return (
                         <li
                           key={s.signal_id}
-                          className="rounded-xl border border-ink-200 bg-white p-3"
+                          className="rounded-xl border border-ink-800 bg-ink-950/60 p-3"
                         >
                           <div className="flex items-center justify-between gap-4">
-                            <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-ink-800">
-                              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-ink-900 text-[11px] font-semibold text-white">
+                            <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-ink-200">
+                              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-brand-600 text-[11px] font-semibold text-white">
                                 {idx + 1}
                               </span>
                               <span className="truncate">
                                 {signalLabel(s.signal_id)}
                               </span>
                             </span>
-                            <span className="shrink-0 text-sm tabular-nums text-ink-500">
+                            <span className="shrink-0 text-sm tabular-nums text-ink-400">
                               {s.count}
                             </span>
                           </div>
-                          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink-100">
+                          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700"
+                              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -255,7 +255,7 @@ export default function InsightsPage() {
                     {insights.top_phrases.map((p) => (
                       <span
                         key={p.phrase}
-                        className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-ink-50 px-3 py-1.5 text-sm text-ink-800"
+                        className="inline-flex items-center gap-2 rounded-full border border-ink-800 bg-ink-950/60 px-3 py-1.5 text-sm text-ink-200"
                       >
                         <span className="font-mono">{p.phrase}</span>
                         <span className="text-xs text-ink-500">×{p.count}</span>
@@ -305,8 +305,8 @@ export default function InsightsPage() {
                     {history.map((h, i) => {
                       const theme = riskTheme(h.risk_level as RiskLevel);
                       return (
-                        <tr key={i} className="border-t border-ink-100">
-                          <td className="px-3 py-3 font-medium text-ink-800">
+                        <tr key={i} className="border-t border-ink-800">
+                          <td className="px-3 py-3 font-medium text-ink-200">
                             {modeLabel(h.mode)}
                           </td>
                           <td className="px-3 py-3">
@@ -316,10 +316,10 @@ export default function InsightsPage() {
                               {h.risk_level}
                             </span>
                           </td>
-                          <td className="px-3 py-3 text-ink-700">
+                          <td className="px-3 py-3 text-ink-300">
                             {h.threat_category}
                           </td>
-                          <td className="max-w-[320px] truncate px-3 py-3 text-ink-600">
+                          <td className="max-w-[320px] truncate px-3 py-3 text-ink-400">
                             {h.preview}
                           </td>
                           <td className="whitespace-nowrap px-3 py-3 text-ink-500">
@@ -346,7 +346,7 @@ export default function InsightsPage() {
 
 function ErrorCard({ message }: { message: string }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+    <div className="flex items-start gap-3 rounded-xl border border-red-800 bg-red-950/40 p-4 text-sm text-red-300">
       <Info className="mt-0.5 h-4 w-4 shrink-0" />
       <span>{message}</span>
     </div>
@@ -371,13 +371,13 @@ function TotalsRow({ insights }: { insights: InsightsSummary }) {
         label="Clean verdicts"
         value={totalSafe.toLocaleString()}
         icon={<Shield className="h-4 w-4" />}
-        accent="text-emerald-700"
+        accent="text-emerald-400"
       />
       <StatCard
         label="High-risk or likely scams"
         value={totalHighRisk.toLocaleString()}
         icon={<AlertTriangle className="h-4 w-4" />}
-        accent="text-red-700"
+        accent="text-red-400"
       />
     </div>
   );
@@ -396,13 +396,13 @@ function StatCard({
 }) {
   return (
     <div className="card p-5">
-      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-ink-500">
+      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-ink-400">
         <span>{label}</span>
-        <span className={cn("grid h-7 w-7 place-items-center rounded-lg bg-ink-900 text-white", accent && "bg-ink-100", accent)}>
+        <span className={cn("grid h-7 w-7 place-items-center rounded-lg bg-white/10", accent)}>
           {icon}
         </span>
       </div>
-      <div className={cn("mt-3 text-3xl font-semibold tabular-nums text-ink-900", accent)}>
+      <div className={cn("mt-3 text-3xl font-semibold tabular-nums text-ink-50", accent)}>
         {value}
       </div>
     </div>
@@ -420,12 +420,12 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-700">
+      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-950 text-brand-400">
         {icon}
       </span>
       <div>
-        <h3 className="text-base font-semibold text-ink-900">{title}</h3>
-        <p className="text-xs text-ink-500">{subtitle}</p>
+        <h3 className="text-base font-semibold text-ink-50">{title}</h3>
+        <p className="text-xs text-ink-400">{subtitle}</p>
       </div>
     </div>
   );
@@ -483,18 +483,18 @@ function EscalationsCard({
             return (
               <li
                 key={i}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-200 bg-white p-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-800 bg-ink-950/60 p-3"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className={cn("chip border shrink-0", theme.chip)}>
                     {e.risk_level}
                   </span>
                   {e.count > 1 && (
-                    <span className="chip shrink-0 border-ink-200 bg-ink-50 text-ink-600">
+                    <span className="chip shrink-0 border-ink-700 bg-ink-900 text-ink-300">
                       seen {e.count}×
                     </span>
                   )}
-                  <span className="truncate text-sm text-ink-700">
+                  <span className="truncate text-sm text-ink-300">
                     {e.threat_category} · {e.preview}
                   </span>
                 </div>
@@ -534,7 +534,7 @@ function TipsCard() {
         {tips.map((tip) => (
           <li
             key={tip}
-            className="flex gap-3 rounded-xl border border-ink-200 bg-white p-3 text-sm text-ink-700"
+            className="flex gap-3 rounded-xl border border-ink-800 bg-ink-950/60 p-3 text-sm text-ink-300"
           >
             <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
             <span>{tip}</span>
@@ -547,7 +547,7 @@ function TipsCard() {
 
 function EmptyChart() {
   return (
-    <div className="grid h-full place-items-center text-sm text-ink-400">
+    <div className="grid h-full place-items-center text-sm text-ink-500">
       No data yet. Run an analysis to populate this chart.
     </div>
   );
@@ -562,25 +562,26 @@ function EmptyBlock() {
 }
 
 const tooltipStyle = {
-  background: "white",
-  border: "1px solid #d7dae2",
+  background: "#14172a",
+  border: "1px solid #252a3a",
   borderRadius: 10,
-  boxShadow: "0 4px 14px rgba(10,12,26,0.06)",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
   fontSize: 12,
+  color: "#eceef2",
 };
 
 function levelColor(level: RiskLevel): string {
   switch (level) {
     case "Safe":
-      return "#10a572";
+      return "#34d399";
     case "Low Risk":
-      return "#65a30d";
+      return "#a3e635";
     case "Suspicious":
-      return "#d97706";
+      return "#fbbf24";
     case "Likely Scam":
-      return "#dc2626";
+      return "#f87171";
     case "High Risk":
-      return "#991b1b";
+      return "#dc2626";
   }
 }
 

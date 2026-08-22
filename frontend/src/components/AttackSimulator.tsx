@@ -22,14 +22,14 @@ export function AttackSimulator() {
   return (
     <div className="card p-6 sm:p-7">
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-900 text-white">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
           <ShieldCheck className="h-4 w-4" />
         </span>
         <div>
-          <h3 className="text-base font-semibold text-ink-900">
+          <h3 className="text-base font-semibold text-ink-50">
             Attack Simulator
           </h3>
-          <p className="text-xs text-ink-500">
+          <p className="text-xs text-ink-400">
             Pick a real scam pattern and watch SuSagi analyze it live — same engine, same pipeline
           </p>
         </div>
@@ -41,20 +41,20 @@ export function AttackSimulator() {
             key={s.id}
             type="button"
             onClick={() => router.push(`/analyze?scenario=${s.id}`)}
-            className="group flex flex-col gap-2 rounded-xl border border-ink-200 bg-white p-4 text-left transition hover:border-brand-300 hover:bg-brand-50/40"
+            className="group flex flex-col gap-2 rounded-xl border border-ink-800 bg-ink-950/40 p-4 text-left transition hover:border-brand-700 hover:bg-brand-950/30"
           >
             <div className="flex items-center gap-2.5">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700 group-hover:bg-brand-100">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-950 text-brand-400 group-hover:bg-brand-900">
                 {ICONS[s.id]}
               </span>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-ink-900">{s.label}</div>
-                <div className="text-[11px] uppercase tracking-wide text-ink-400">
+                <div className="text-sm font-semibold text-ink-50">{s.label}</div>
+                <div className="text-[11px] uppercase tracking-wide text-ink-500">
                   {s.category}
                 </div>
               </div>
             </div>
-            <p className="text-xs italic leading-relaxed text-ink-600">
+            <p className="text-xs italic leading-relaxed text-ink-400">
               {s.description}
             </p>
           </button>

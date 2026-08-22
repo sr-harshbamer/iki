@@ -3,11 +3,11 @@ import { Logo } from "./Logo";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-ink-200 bg-white">
+    <footer className="border-t border-ink-800 bg-ink-950">
       <div className="container-wide grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-4">
           <Logo />
-          <p className="text-sm leading-relaxed text-ink-600">
+          <p className="text-sm leading-relaxed text-ink-400">
             A decision-support platform that helps ordinary people evaluate
             suspicious messages, links, and job offers with clear, evidence-based
             reasoning.
@@ -28,7 +28,7 @@ export function SiteFooter() {
         ]} />
 
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-ink-900">Note</h4>
+          <h4 className="text-sm font-semibold text-ink-50">Note</h4>
           <p className="text-xs leading-relaxed text-ink-500">
             SuSagi provides educational guidance and risk indicators. It is not
             an official cybersecurity authority and does not automatically block,
@@ -55,13 +55,13 @@ function FooterCol({
 }) {
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-ink-900">{title}</h4>
+      <h4 className="text-sm font-semibold text-ink-50">{title}</h4>
       <ul className="space-y-2">
         {items.map((i) => (
           <li key={i.href}>
             <Link
               href={i.href}
-              className="text-sm text-ink-600 transition hover:text-ink-900"
+              className="text-sm text-ink-400 transition hover:text-ink-50"
             >
               {i.label}
             </Link>
