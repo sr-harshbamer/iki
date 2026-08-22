@@ -94,10 +94,19 @@ class CallMonitorService : Service() {
     private var profileId: Int? = null
     private var isCallActive = false
 
+    // Only ever populated on API < 31 -- TelephonyCallback.CallStateListener
+    // (the API 31+ replacement) deliberately stopped exposing the number to
+    // third-party apps for privacy reasons, and reading it another way would
+    // need the much more sensitive READ_CALL_LOG permission. Reports built
+    // on newer Android just say "Unknown" for this field rather than asking
+    // for a permission this feature doesn't otherwise need.
+    private var lastKnownNumber: String? = null
+
     private val phoneStateListener = object : PhoneStateListener() {
         @Deprecated("Used for API < 31 only")
         override fun onCallStateChanged(state: Int, phoneNumber: String?) {
             isCallActive = state == TelephonyManager.CALL_STATE_OFFHOOK
+            if (!phoneNumber.isNullOrBlank()) lastKnownNumber = phoneNumber
         }
     }
 
@@ -268,16 +277,16 @@ class CallMonitorService : Service() {
                 val bScore = json.optInt("behavioral_score", 0)
                 val reason = json.optString("reason", "")
                 state.value = state.value.copy(behavioralScore = bScore, behavioralReason = reason)
-                if (bScore >= 85) showCriticalAlert("This doesn't sound like the person it claims to be", reason)
+                if (bScore >= 85) showCriticalAlert("This doesn't sound like the person it claims to be", reason, "Impersonation")
             }
             "escalation" -> {
-                showCriticalAlert("Protection activated", json.optString("message", ""))
+                showCriticalAlert("Protection activated", json.optString("message", ""), "Scam Call")
             }
             else -> {
                 val score = json.optInt("score", state.value.score)
                 val transcript = json.optString("transcript", state.value.lastTranscript)
                 state.value = state.value.copy(score = score, lastTranscript = transcript)
-                if (score >= 75) showCriticalAlert("High risk call in progress", "Live risk score: $score/100")
+                if (score >= 75) showCriticalAlert("High risk call in progress", "Live risk score: $score/100", "High-Risk Conversation")
             }
         }
     }
@@ -316,13 +325,19 @@ class CallMonitorService : Service() {
      * for exactly this (incoming calls, alarms): it interrupts whatever's
      * currently on screen -- the live call included -- to show
      * CallAlertActivity immediately. */
-    private fun showCriticalAlert(title: String, body: String) {
+    private fun showCriticalAlert(title: String, body: String, category: String) {
         if (alreadyAlertedThisCall) return
         alreadyAlertedThisCall = true
+
+        val alarmEnabled = getSharedPreferences("susagi", MODE_PRIVATE).getBoolean("alarm_enabled", false)
 
         val fullScreenIntent = Intent(this, CallAlertActivity::class.java).apply {
             putExtra(CallAlertActivity.EXTRA_TITLE, title)
             putExtra(CallAlertActivity.EXTRA_REASON, body)
+            putExtra(CallAlertActivity.EXTRA_CATEGORY, category)
+            putExtra(CallAlertActivity.EXTRA_SENDER, lastKnownNumber ?: "Unknown")
+            putExtra(CallAlertActivity.EXTRA_TRANSCRIPT, state.value.lastTranscript)
+            putExtra(CallAlertActivity.EXTRA_ALARM_ENABLED, alarmEnabled)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(

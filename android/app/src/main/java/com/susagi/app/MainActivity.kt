@@ -209,6 +209,46 @@ fun VoiceGuardScreen(
 
         Spacer(Modifier.height(20.dp))
         StatusCard(monitorState)
+
+        Spacer(Modifier.height(20.dp))
+        SettingsCard(prefs)
+    }
+}
+
+@Composable
+private fun SettingsCard(prefs: SharedPreferences) {
+    var alarmEnabled by remember { mutableStateOf(prefs.getBoolean("alarm_enabled", false)) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(InkCard)
+            .padding(16.dp),
+    ) {
+        Text("SETTINGS", color = InkMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Sound alarm on scam detection", color = Color.White, fontSize = 14.sp)
+                Text(
+                    "Loud alert sound alongside the visual warning. Off by default.",
+                    color = InkMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+            Switch(
+                checked = alarmEnabled,
+                onCheckedChange = {
+                    alarmEnabled = it
+                    prefs.edit().putBoolean("alarm_enabled", it).apply()
+                },
+                colors = SwitchDefaults.colors(checkedThumbColor = Brand, checkedTrackColor = Brand.copy(alpha = 0.5f)),
+            )
+        }
     }
 }
 
