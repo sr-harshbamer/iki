@@ -132,7 +132,7 @@ export function ContentInput({
             key={s.label}
             type="button"
             onClick={() => onChange(s.value)}
-            className="chip transition hover:border-brand-700 hover:bg-brand-950 hover:text-brand-300"
+            className="chip transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
             disabled={disabled}
           >
             {s.label}

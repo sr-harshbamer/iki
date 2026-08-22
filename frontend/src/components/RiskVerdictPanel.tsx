@@ -41,47 +41,50 @@ export function RiskVerdictPanel({
       aria-labelledby="verdict-heading"
       className="animate-verdict-in space-y-6"
     >
-      {/* ── Verdict header card ───────────────────────────────────── */}
+      {/* ── Verdict header card — the "one glance" answer ─────────── */}
       <div
         className={cn(
           "card overflow-hidden",
-          // subtle tinted surface matching severity
+          // strong tinted surface matching severity — color, icon, and text
+          // together, so the verdict never depends on color alone
           theme.bg,
-          "ring-1",
+          "ring-2",
           theme.ring,
         )}
       >
         <div className="flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="chip bg-ink-950/60">
-                <Tag className="h-3.5 w-3.5 text-brand-400" />
+              <span className="chip bg-ink-900/70">
+                <Tag className="h-3.5 w-3.5 text-brand-600" />
                 {modeLabel(result.mode)}
               </span>
-              <span className={cn("chip border", theme.chip)}>
-                <VerdictIcon level={result.risk_level} />
-                {result.risk_level}
-              </span>
-              <span className="chip bg-ink-950/60">
+              <span className="chip bg-ink-900/70">
                 <Tag className="h-3.5 w-3.5 text-ink-400" />
                 {result.threat_category}
               </span>
             </div>
-            <h2
-              id="verdict-heading"
-              className="mt-4 text-2xl font-semibold tracking-tight text-ink-50 sm:text-3xl"
-            >
-              {theme.headline}
-            </h2>
-            <p className="mt-2 text-sm text-ink-300">
+            <div className="mt-4 flex items-center gap-3">
+              <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-full border-2", theme.chip)}>
+                <VerdictIcon level={result.risk_level} className="h-6 w-6" />
+              </span>
+              <h2
+                id="verdict-heading"
+                className="text-2xl font-bold tracking-tight text-ink-50 sm:text-3xl"
+              >
+                {theme.headline}
+              </h2>
+            </div>
+            <p className="mt-3 text-[15px] leading-relaxed text-ink-300">
+              Risk level: <strong className="font-semibold text-ink-50">{result.risk_level}</strong>.
               Based on {result.signals.length}{" "}
-              {result.signals.length === 1 ? "signal" : "signals"} detected in
-              the content you provided.
+              {result.signals.length === 1 ? "signal" : "signals"} found in the
+              content you provided.
             </p>
           </div>
 
-          {/* Score gauge */}
-          <div className="flex shrink-0 items-center gap-5">
+          {/* Score gauge — supporting detail, not the headline */}
+          <div className="flex shrink-0 items-center gap-5 rounded-2xl bg-ink-900/50 p-4">
             <ScoreDial
               score={result.risk_score}
               low={result.confidence_low}
@@ -89,94 +92,106 @@ export function RiskVerdictPanel({
               barClass={theme.bar}
             />
             <div className="text-sm">
-              <div className="font-medium text-ink-300">Risk score</div>
-              <div className="mt-1 text-3xl font-semibold tabular-nums text-ink-50">
+              <div className="font-medium text-ink-400">Risk score</div>
+              <div className="mt-1 text-2xl font-bold tabular-nums text-ink-50">
                 <AnimatedScore target={result.risk_score} />
-                <span className="text-lg text-ink-500">/100</span>
+                <span className="text-base text-ink-500">/100</span>
               </div>
-              <div className="mt-1 text-xs text-ink-400">
-                Confidence {result.confidence_low}–{result.confidence_high}
+              <div className="mt-1 text-xs text-ink-500">
+                Range {result.confidence_low}–{result.confidence_high}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Analyzed content with highlights ─────────────────────── */}
-      <div className="card p-6 sm:p-7">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
-            Analyzed content
-          </h3>
-          {result.highlighted_phrases.length > 0 && (
-            <span className="text-xs text-ink-500">
-              {result.highlighted_phrases.length} suspicious{" "}
-              {result.highlighted_phrases.length === 1 ? "phrase" : "phrases"} highlighted
-            </span>
-          )}
+      {/* ── WHAT HAPPENED ─────────────────────────────────────────── */}
+      <div>
+        <SectionEyebrow>What happened</SectionEyebrow>
+        <div className="mt-3 card p-6 sm:p-7">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
+              Analyzed content
+            </h3>
+            {result.highlighted_phrases.length > 0 && (
+              <span className="text-xs text-ink-500">
+                {result.highlighted_phrases.length} suspicious{" "}
+                {result.highlighted_phrases.length === 1 ? "phrase" : "phrases"} highlighted
+              </span>
+            )}
+          </div>
+          <div className="mt-3 rounded-xl bg-ink-950 p-4">
+            <HighlightedContent
+              content={content}
+              phrases={result.highlighted_phrases}
+            />
+          </div>
         </div>
-        <div className="mt-3 rounded-xl bg-ink-950 p-4">
-          <HighlightedContent
-            content={content}
-            phrases={result.highlighted_phrases}
+      </div>
+
+      {/* ── WHY IT'S SUSPICIOUS ───────────────────────────────────── */}
+      <div>
+        <SectionEyebrow>Why it&apos;s suspicious</SectionEyebrow>
+        <div className="mt-3 space-y-6">
+          {result.signals.length > 0 && <SignalList result={result} />}
+
+          {!isSafe && (
+            <div className="grid gap-6 lg:grid-cols-2">
+              <DecisionRiskCard decisionRisk={result.decision_risk} />
+              {result.attack_forecast && (
+                <AttackForecastCard forecast={result.attack_forecast} />
+              )}
+            </div>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ExplanationCard
+              icon={<TriangleAlert className="h-4 w-4" />}
+              tone="warn"
+              title="Why it was flagged"
+              subtitle="The specific patterns the analyser saw"
+              items={result.why_flagged}
+            />
+            <ExplanationCard
+              icon={<ShieldX className="h-4 w-4" />}
+              tone="danger"
+              title="Why you should not proceed"
+              subtitle={
+                isSafe
+                  ? "Keep these general cautions in mind"
+                  : "What could realistically happen if you do"
+              }
+              items={result.why_not_proceed}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── WHAT YOU SHOULD DO ────────────────────────────────────── */}
+      <div>
+        <SectionEyebrow>What you should do</SectionEyebrow>
+        <div className="mt-3 grid gap-6 lg:grid-cols-2">
+          <ExplanationCard
+            icon={<ShieldCheck className="h-4 w-4" />}
+            tone="safe"
+            title="Recommended safe action"
+            subtitle="What to do right now"
+            items={result.safe_actions}
+            emphasize
+          />
+          <ExplanationCard
+            icon={<SlashSquare className="h-4 w-4" />}
+            tone="neutral"
+            title="Block & report guidance"
+            subtitle="Platform-agnostic steps you can take"
+            items={result.block_report_guidance}
           />
         </div>
       </div>
 
-      {/* ── Signals (detected red flags) ─────────────────────────── */}
-      {result.signals.length > 0 && (
-        <SignalList result={result} />
-      )}
-
-      {/* ── Decision risk + attack forecast ──────────────────────── */}
-      {!isSafe && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <DecisionRiskCard decisionRisk={result.decision_risk} />
-          {result.attack_forecast && (
-            <AttackForecastCard forecast={result.attack_forecast} />
-          )}
-        </div>
-      )}
-
-      {/* ── The four explanation layers ──────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ExplanationCard
-          icon={<TriangleAlert className="h-4 w-4" />}
-          tone="warn"
-          title="Why it was flagged"
-          subtitle="The specific patterns the analyser saw"
-          items={result.why_flagged}
-        />
-        <ExplanationCard
-          icon={<ShieldX className="h-4 w-4" />}
-          tone="danger"
-          title="Why you should not proceed"
-          subtitle={
-            isSafe
-              ? "Keep these general cautions in mind"
-              : "What could realistically happen if you do"
-          }
-          items={result.why_not_proceed}
-        />
-        <ExplanationCard
-          icon={<ShieldCheck className="h-4 w-4" />}
-          tone="safe"
-          title="Recommended safe action"
-          subtitle="What to do right now"
-          items={result.safe_actions}
-        />
-        <ExplanationCard
-          icon={<SlashSquare className="h-4 w-4" />}
-          tone="neutral"
-          title="Block & report guidance"
-          subtitle="Platform-agnostic steps you can take"
-          items={result.block_report_guidance}
-        />
-      </div>
-
       {/* ── Disclaimer ──────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5 text-xs leading-relaxed text-ink-500">
-        <strong className="text-ink-300">Important:</strong> SuSagi is a
+      <div className="rounded-2xl border border-ink-800 bg-ink-900 p-5 text-sm leading-relaxed text-ink-400">
+        <strong className="text-ink-200">Important:</strong> SuSagi is a
         decision-support and educational tool. It does not automatically block,
         report, or take action on any content. Treat results as guidance, and
         when in doubt, verify through the sender&apos;s official channels.
@@ -185,21 +200,35 @@ export function RiskVerdictPanel({
   );
 }
 
+function SectionEyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-brand-600">
+      {children}
+    </h3>
+  );
+}
+
 /* ─────────────────────────────────────────────────────────── */
 
-function VerdictIcon({ level }: { level: AnalysisResult["risk_level"] }) {
+function VerdictIcon({
+  level,
+  className = "h-3.5 w-3.5",
+}: {
+  level: AnalysisResult["risk_level"];
+  className?: string;
+}) {
   switch (level) {
     case "Safe":
-      return <CheckCircle2 className="h-3.5 w-3.5" />;
+      return <CheckCircle2 className={className} />;
     case "Low Risk":
-      return <ShieldCheck className="h-3.5 w-3.5" />;
+      return <ShieldCheck className={className} />;
     case "Suspicious":
-      return <TriangleAlert className="h-3.5 w-3.5" />;
+      return <TriangleAlert className={className} />;
     case "Likely Scam":
-      return <ShieldAlert className="h-3.5 w-3.5" />;
+      return <ShieldAlert className={className} />;
     case "High Risk":
     default:
-      return <AlertOctagon className="h-3.5 w-3.5" />;
+      return <AlertOctagon className={className} />;
   }
 }
 
@@ -283,7 +312,7 @@ function ScoreDial({
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="rgba(255,255,255,0.08)"
+        stroke="rgba(20,23,42,0.12)"
         strokeWidth={stroke}
         fill="none"
       />
@@ -305,7 +334,7 @@ function ScoreDial({
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="rgba(255,255,255,0.08)"
+        stroke="rgba(20,23,42,0.12)"
         strokeWidth={stroke}
         strokeDasharray={circumference}
         strokeDashoffset={lowOffset}
@@ -341,7 +370,7 @@ function SignalList({ result }: { result: AnalysisResult }) {
   return (
     <div className="card p-6 sm:p-7">
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-800 text-ink-50">
           <ListChecks className="h-4 w-4" />
         </span>
         <div>
@@ -375,7 +404,7 @@ function SignalList({ result }: { result: AnalysisResult }) {
                       {s.evidence.map((ev, i) => (
                         <code
                           key={i}
-                          className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-[12px] text-ink-300"
+                          className="rounded bg-ink-800 px-1.5 py-0.5 font-mono text-[12px] text-ink-100"
                         >
                           {ev}
                         </code>
@@ -386,10 +415,10 @@ function SignalList({ result }: { result: AnalysisResult }) {
                 <span
                   className={cn(
                     "shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide",
-                    s.severity === "critical" && "border-red-700 bg-red-700 text-white",
+                    s.severity === "critical" && "border-red-800 bg-red-800 text-white",
                     s.severity === "high" && "border-red-600 bg-red-600 text-white",
-                    s.severity === "medium" && "border-amber-700 bg-amber-900/60 text-amber-200",
-                    s.severity === "low" && "border-lime-700 bg-lime-900/60 text-lime-200",
+                    s.severity === "medium" && "border-amber-300 bg-amber-100 text-amber-900",
+                    s.severity === "low" && "border-lime-300 bg-lime-100 text-lime-900",
                   )}
                 >
                   {st.label}
@@ -406,14 +435,14 @@ function SignalList({ result }: { result: AnalysisResult }) {
 function decisionRiskTheme(level: DecisionRiskLevel) {
   switch (level) {
     case "Low":
-      return { bg: "bg-emerald-950/30", ring: "ring-emerald-800/60", text: "text-emerald-300", chip: "bg-emerald-950/50 text-emerald-300 border-emerald-800" };
+      return { bg: "bg-emerald-50", ring: "ring-emerald-300", text: "text-emerald-800", chip: "bg-emerald-50 text-emerald-800 border-emerald-300" };
     case "Moderate":
-      return { bg: "bg-amber-950/30", ring: "ring-amber-800/60", text: "text-amber-300", chip: "bg-amber-950/50 text-amber-300 border-amber-800" };
+      return { bg: "bg-amber-50", ring: "ring-amber-300", text: "text-amber-800", chip: "bg-amber-50 text-amber-800 border-amber-300" };
     case "High":
-      return { bg: "bg-red-950/30", ring: "ring-red-800/60", text: "text-red-300", chip: "bg-red-950/50 text-red-300 border-red-800" };
+      return { bg: "bg-red-50", ring: "ring-red-300", text: "text-red-800", chip: "bg-red-50 text-red-800 border-red-300" };
     case "Critical":
     default:
-      return { bg: "bg-red-950/50", ring: "ring-red-700", text: "text-red-200", chip: "bg-red-900/60 text-red-200 border-red-700" };
+      return { bg: "bg-red-100", ring: "ring-red-400", text: "text-red-900", chip: "bg-red-100 text-red-900 border-red-400" };
   }
 }
 
@@ -435,7 +464,7 @@ function DecisionRiskCard({
       <div className="p-6 sm:p-7">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-800 text-ink-50">
               <Gauge className="h-4 w-4" />
             </span>
             <div>
@@ -499,7 +528,7 @@ function AttackForecastCard({
   forecast: NonNullable<AnalysisResult["attack_forecast"]>;
 }) {
   return (
-    <div className="card overflow-hidden bg-ink-900 ring-1 ring-brand-800/50 text-white">
+    <div className="card overflow-hidden bg-brand-900 ring-1 ring-brand-700/60 text-white">
       <div className="p-6 sm:p-7">
         <div className="flex items-center gap-3">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10">
@@ -546,40 +575,49 @@ function ExplanationCard({
   subtitle,
   items,
   tone,
+  emphasize,
 }: {
   icon: React.ReactNode;
   title: string;
   subtitle: string;
   items: string[];
   tone: "warn" | "danger" | "safe" | "neutral";
+  /** The single most actionable card (safe action) — given a stronger tint
+   * and border so it reads as the primary "what to do" answer at a glance. */
+  emphasize?: boolean;
 }) {
   const toneStyles = {
-    warn: "bg-amber-950/40 text-amber-300 border-amber-800",
-    danger: "bg-red-950/40 text-red-300 border-red-800",
-    safe: "bg-emerald-950/40 text-emerald-300 border-emerald-800",
-    neutral: "bg-brand-950/60 text-brand-300 border-brand-800",
+    warn: "bg-amber-50 text-amber-800 border-amber-300",
+    danger: "bg-red-50 text-red-800 border-red-300",
+    safe: "bg-emerald-50 text-emerald-800 border-emerald-300",
+    neutral: "bg-brand-50 text-brand-800 border-brand-300",
   }[tone];
 
   return (
-    <div className="card flex h-full flex-col p-6">
+    <div
+      className={cn(
+        "card flex h-full flex-col p-6",
+        emphasize && "ring-2 ring-emerald-300 bg-emerald-50/40",
+      )}
+    >
       <div className="flex items-center gap-3">
         <span
           className={cn(
-            "grid h-9 w-9 place-items-center rounded-lg border",
+            "grid h-10 w-10 shrink-0 place-items-center rounded-lg border-2",
             toneStyles,
           )}
         >
           {icon}
         </span>
         <div>
-          <h3 className="text-base font-semibold text-ink-50">{title}</h3>
+          <h3 className="text-base font-bold text-ink-50">{title}</h3>
           <p className="text-xs text-ink-400">{subtitle}</p>
         </div>
       </div>
-      <ul className="mt-5 space-y-3.5 text-[15px] leading-relaxed text-ink-300">
+      <ul className="mt-5 space-y-3.5 text-[15px] leading-relaxed text-ink-200">
         {items.map((item, i) => (
           <li key={i} className="flex gap-3">
-            <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-600" />
+            <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-500" />
             <span>{item}</span>
           </li>
         ))}

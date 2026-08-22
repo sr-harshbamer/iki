@@ -39,7 +39,7 @@ export function AnalyzingSequence({ mode }: { mode: AnalysisMode }) {
 
   return (
     <div className="card flex flex-col items-center gap-6 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-950 text-brand-400">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-950 text-brand-600">
         <Loader2 className="h-5 w-5 animate-spin" />
       </span>
       <div>
@@ -62,7 +62,7 @@ export function AnalyzingSequence({ mode }: { mode: AnalysisMode }) {
                 className={cn(
                   "grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors",
                   done && "border-brand-500 bg-brand-500 text-white",
-                  active && !done && "border-brand-400 text-brand-400",
+                  active && !done && "border-brand-400 text-brand-600",
                   !done && !active && "border-ink-700 text-transparent",
                 )}
               >

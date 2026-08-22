@@ -25,7 +25,7 @@ export default function LandingPage() {
             <span className="eyebrow">Public Cyber Safety Platform</span>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl lg:text-[56px] lg:leading-[1.05]">
               Know what a suspicious message{" "}
-              <span className="text-brand-400">actually</span> means —
+              <span className="text-brand-600">actually</span> means —
               before you act on it.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-300">
@@ -43,9 +43,9 @@ export default function LandingPage() {
               </Link>
             </div>
             <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-300">
-              <li className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-brand-400" /> Evidence-based reasoning</li>
-              <li className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-brand-400" /> No login required</li>
-              <li className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-brand-400" /> Works on any device</li>
+              <li className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-brand-600" /> Evidence-based reasoning</li>
+              <li className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-brand-600" /> No login required</li>
+              <li className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-brand-600" /> Works on any device</li>
             </ul>
           </div>
 
@@ -77,7 +77,7 @@ export default function LandingPage() {
       </section>
 
       {/* ──────────────── Attack Simulator ──────────────── */}
-      <section className="bg-black/20 py-16">
+      <section className="bg-ink-900 py-16">
         <div className="container-wide max-w-3xl">
           <span className="eyebrow">See it work, instantly</span>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-ink-50 sm:text-3xl">
@@ -147,7 +147,7 @@ export default function LandingPage() {
       </section>
 
       {/* ──────────────── Why explanations matter ──────────────── */}
-      <section className="bg-black/20 py-20">
+      <section className="bg-ink-900 py-20">
         <div className="container-wide grid gap-14 lg:grid-cols-2 lg:items-center">
           <div>
             <span className="eyebrow">Explainable by design</span>
@@ -215,7 +215,7 @@ export default function LandingPage() {
       {/* ──────────────── CTA ──────────────── */}
       <section className="bg-ink-950 py-20">
         <div className="container-wide">
-          <div className="relative overflow-hidden rounded-3xl border border-ink-800 bg-gradient-to-br from-ink-900 via-ink-900 to-brand-950 px-8 py-14 text-white sm:px-14">
+          <div className="relative overflow-hidden rounded-3xl border border-brand-800 bg-gradient-to-br from-brand-900 via-brand-900 to-brand-950 px-8 py-14 text-white sm:px-14">
             <div className="relative max-w-2xl">
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 Got a message you&apos;re unsure about? Check it in seconds.
@@ -227,7 +227,7 @@ export default function LandingPage() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/analyze"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-ink-950 transition hover:bg-white/90"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-brand-900 transition hover:bg-white/90"
                 >
                   Start an analysis <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -264,7 +264,7 @@ function ModeCard({
       <span className="grid h-11 w-11 place-items-center rounded-lg border border-ink-700 text-lg font-bold text-ink-50">
         {n}
       </span>
-      <div className="mt-6 text-xs font-medium text-brand-400">{tag}</div>
+      <div className="mt-6 text-xs font-medium text-brand-600">{tag}</div>
       <h3 className="mt-1 text-xl font-semibold text-ink-50">{title}</h3>
       <ul className="mt-4 space-y-2 text-sm text-ink-400">
         {bullets.map((b) => (
@@ -289,7 +289,7 @@ function ValueCard({
 }) {
   return (
     <div className="card p-6">
-      <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-ink-50">
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-ink-800 text-ink-50">
         {icon}
       </span>
       <h3 className="mt-4 text-lg font-semibold text-ink-50">{title}</h3>
@@ -304,10 +304,10 @@ function HeroPreview() {
       <CornerDots />
       <div className="flex items-center justify-between">
         <span className="chip">
-          <MessageSquareWarning className="h-3.5 w-3.5 text-brand-400" />
+          <MessageSquareWarning className="h-3.5 w-3.5 text-brand-600" />
           Message Check
         </span>
-        <span className="chip border-red-800 bg-red-950/50 text-red-300">
+        <span className="chip border-red-300 bg-red-50 text-red-800">
           <AlertTriangle className="h-3.5 w-3.5" />
           High Risk
         </span>
@@ -372,7 +372,7 @@ function ExampleScenarios() {
         <div key={s.tag} className="card p-5">
           <div className="flex items-center justify-between">
             <span className="eyebrow">{s.tag}</span>
-            <span className="chip border-red-800 bg-red-950/50 text-red-300">
+            <span className="chip border-red-300 bg-red-50 text-red-800">
               {s.verdict}
             </span>
           </div>

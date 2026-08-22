@@ -42,7 +42,7 @@ export function StatsBar() {
   ];
 
   return (
-    <section className="border-y border-ink-800 bg-black/20 py-12">
+    <section className="border-y border-ink-800 bg-ink-900 py-12">
       <div className="container-wide grid grid-cols-2 gap-8 sm:grid-cols-4">
         {items.map((it) => (
           <div key={it.label} className="text-center sm:text-left">

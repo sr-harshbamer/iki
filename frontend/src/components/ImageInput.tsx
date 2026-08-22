@@ -86,11 +86,11 @@ export function ImageInput({
           className={cn(
             "flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center transition",
             dragOver
-              ? "border-brand-500 bg-brand-950/40"
-              : "border-ink-700 bg-ink-900/40 hover:border-brand-700 hover:bg-brand-950/30",
+              ? "border-brand-500 bg-brand-50"
+              : "border-ink-700 bg-ink-900/40 hover:border-brand-300 hover:bg-brand-50",
           )}
         >
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-brand-950 text-brand-400">
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-brand-950 text-brand-600">
             <ImagePlus className="h-5 w-5" />
           </span>
           <p className="text-sm font-medium text-ink-200">

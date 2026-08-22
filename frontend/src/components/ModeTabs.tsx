@@ -67,7 +67,7 @@ export function ModeTabs({
             <span
               className={cn(
                 "grid h-9 w-9 shrink-0 place-items-center rounded-lg",
-                active ? "bg-white/15 text-white" : "bg-brand-950 text-brand-400",
+                active ? "bg-white/15 text-white" : "bg-brand-950 text-brand-600",
               )}
             >
               {t.icon}

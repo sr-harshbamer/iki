@@ -100,7 +100,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section className="bg-black/20 py-12">
+      <section className="bg-ink-900 py-12">
         <div className="container-wide space-y-8">
           {error && <ErrorCard message={error} />}
 
@@ -126,18 +126,18 @@ export default function InsightsPage() {
                         <XAxis
                           dataKey="category"
                           interval={0}
-                          tick={{ fontSize: 11, fill: "#8a91a4" }}
+                          tick={{ fontSize: 11, fill: "#566078" }}
                           tickFormatter={(v: string) =>
                             v.length > 16 ? v.slice(0, 14) + "…" : v
                           }
                         />
                         <YAxis
                           allowDecimals={false}
-                          tick={{ fontSize: 11, fill: "#8a91a4" }}
+                          tick={{ fontSize: 11, fill: "#566078" }}
                         />
                         <Tooltip
                           contentStyle={tooltipStyle}
-                          cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                          cursor={{ fill: "rgba(20,23,42,0.05)" }}
                         />
                         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                           {insights.by_category.map((row) => (
@@ -177,7 +177,7 @@ export default function InsightsPage() {
                             <Cell
                               key={row.level}
                               fill={levelColor(row.level as RiskLevel)}
-                              stroke="#0a0c1a"
+                              stroke="#ffffff"
                               strokeWidth={2}
                             />
                           ))}
@@ -186,7 +186,7 @@ export default function InsightsPage() {
                         <Legend
                           verticalAlign="bottom"
                           iconType="circle"
-                          wrapperStyle={{ fontSize: 12, paddingTop: 8, color: "#b3b8c6" }}
+                          wrapperStyle={{ fontSize: 12, paddingTop: 8, color: "#454d63" }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -346,7 +346,7 @@ export default function InsightsPage() {
 
 function ErrorCard({ message }: { message: string }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-red-800 bg-red-950/40 p-4 text-sm text-red-300">
+    <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">
       <Info className="mt-0.5 h-4 w-4 shrink-0" />
       <span>{message}</span>
     </div>
@@ -371,13 +371,13 @@ function TotalsRow({ insights }: { insights: InsightsSummary }) {
         label="Clean verdicts"
         value={totalSafe.toLocaleString()}
         icon={<Shield className="h-4 w-4" />}
-        accent="text-emerald-400"
+        accent="text-emerald-700"
       />
       <StatCard
         label="High-risk or likely scams"
         value={totalHighRisk.toLocaleString()}
         icon={<AlertTriangle className="h-4 w-4" />}
-        accent="text-red-400"
+        accent="text-red-700"
       />
     </div>
   );
@@ -398,7 +398,7 @@ function StatCard({
     <div className="card p-5">
       <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-ink-400">
         <span>{label}</span>
-        <span className={cn("grid h-7 w-7 place-items-center rounded-lg bg-white/10", accent)}>
+        <span className={cn("grid h-7 w-7 place-items-center rounded-lg bg-ink-800", accent)}>
           {icon}
         </span>
       </div>
@@ -420,7 +420,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-950 text-brand-400">
+      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-950 text-brand-600">
         {icon}
       </span>
       <div>
@@ -562,12 +562,12 @@ function EmptyBlock() {
 }
 
 const tooltipStyle = {
-  background: "#14172a",
-  border: "1px solid #252a3a",
+  background: "#ffffff",
+  border: "1px solid #dde1e7",
   borderRadius: 10,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+  boxShadow: "0 8px 24px rgba(20,23,42,0.12)",
   fontSize: 12,
-  color: "#eceef2",
+  color: "#181c28",
 };
 
 function levelColor(level: RiskLevel): string {

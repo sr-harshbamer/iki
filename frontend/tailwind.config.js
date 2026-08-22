@@ -9,59 +9,71 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Neutral surface palette
+        // Neutral surface palette for the "one glance = one clear decision"
+        // accessible light theme. Deliberately inverted from the usual
+        // 50=lightest/950=darkest convention: every component in this app
+        // was already written against the semantic pattern bg-ink-950 (page
+        // background) / text-ink-50 (primary text) / ink-900 (card surface)
+        // / ink-300..400 (secondary text) — inverting the hex assignments
+        // here (950 now lightest, 50 now darkest) flips the whole app to a
+        // light, high-contrast theme without touching every call site.
         ink: {
-          50:  "#f6f7f9",
-          100: "#eceef2",
-          200: "#d7dae2",
-          300: "#b3b8c6",
-          400: "#8a91a4",
-          500: "#646c82",
-          600: "#4c5366",
-          700: "#3a4054",
-          800: "#252a3a",
-          900: "#14172a",
-          950: "#0a0c1a",
+          50:  "#181c28", // primary text — dark charcoal, not black or gray
+          100: "#252a3a",
+          200: "#333a4d",
+          300: "#454d63", // secondary body text — AA on white/off-white
+          400: "#566078", // tertiary/muted text — still AA-safe at normal size
+          500: "#6b7385",
+          600: "#7b8398", // decorative dots, ghost-button text
+          700: "#a6aebf", // stronger borders
+          800: "#dde1e7", // hairlines, card borders
+          900: "#ffffff", // card / surface background
+          950: "#f5f6f8", // page background — very light off-white
         },
-        // Brand — deep, trustworthy teal-blue
+        // Brand — deep navy/blue for trust and navigation. Kept as a normal
+        // (non-inverted) ramp: brand-900/950 stay genuinely dark navy, used
+        // deliberately for the handful of dark accent cards (attack
+        // forecast, CTA banner) that intentionally contrast against the
+        // light page.
         brand: {
-          50:  "#effaf9",
-          100: "#d7f2ef",
-          200: "#b0e4e0",
-          300: "#7fcfcb",
-          400: "#4bb2b0",
-          500: "#2f9595",
-          600: "#22787c",
-          700: "#1e5f66",
-          800: "#1b4b52",
-          900: "#183e44",
-          950: "#0f272b",
+          50:  "#eef4fb",
+          100: "#dbe7f6",
+          200: "#b0cceb",
+          300: "#7ea9db",
+          400: "#4a80c4",
+          500: "#2f5fa3", // primary navy-blue, used for buttons/links
+          600: "#254c85",
+          700: "#1d3c6b",
+          800: "#152c50",
+          900: "#101f38",
+          950: "#0a1526",
         },
-        // Severity scale
+        // Severity scale (kept for score dials / accents; each pairing in
+        // components also always carries an icon + text label, never color
+        // alone, per WCAG 2.2 and the "never rely on color alone" rule).
         severity: {
-          safe:        "#10a572",
-          low:         "#65a30d",
-          suspicious:  "#d97706",
-          scam:        "#dc2626",
-          high:        "#991b1b",
+          safe:        "#0f7a52",
+          low:         "#4d7c0f",
+          suspicious:  "#b45309",
+          scam:        "#b91c1c",
+          high:        "#7f1d1d",
         },
       },
       fontFamily: {
-        sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Inter", "sans-serif"],
-        display: ["ui-sans-serif", "system-ui", "Inter", "sans-serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+        display: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        // Dark theme: a drop shadow is invisible against a near-black page,
-        // so "elevation" comes from a faint light ring instead, plus an
-        // optional brand-colored glow for the elements that should pop.
-        soft: "0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
-        card: "0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05)",
-        ring: "0 0 0 1px rgba(255,255,255,0.06)",
-        glow: "0 0 40px rgba(47,149,149,0.25)",
+        // Light theme: elevation comes from a soft drop shadow plus a
+        // faint dark hairline ring, rather than the dark-theme's light glow.
+        soft: "0 1px 2px rgba(20,23,42,0.06), 0 0 0 1px rgba(20,23,42,0.05)",
+        card: "0 8px 24px rgba(20,23,42,0.08), 0 0 0 1px rgba(20,23,42,0.06)",
+        ring: "0 0 0 1px rgba(20,23,42,0.08)",
+        glow: "0 0 32px rgba(47,95,163,0.18)",
       },
       backgroundImage: {
         "hero-grid":
-          "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0)",
+          "radial-gradient(circle at 1px 1px, rgba(20,23,42,0.07) 1px, transparent 0)",
       },
     },
   },

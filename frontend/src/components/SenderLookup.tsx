@@ -41,7 +41,7 @@ export function SenderLookup() {
   return (
     <div className="card p-6 sm:p-7">
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-800 text-ink-50">
           <PhoneCall className="h-4 w-4" />
         </span>
         <div>
@@ -84,7 +84,7 @@ export function SenderLookup() {
         <button
           type="button"
           onClick={() => setQuery("sim-dad")}
-          className="font-medium text-brand-400 underline decoration-dotted underline-offset-2"
+          className="font-medium text-brand-600 underline decoration-dotted underline-offset-2"
         >
           sim-dad
         </button>{" "}
@@ -92,7 +92,7 @@ export function SenderLookup() {
       </p>
 
       {error && (
-        <p className="mt-4 text-sm text-red-400">{error}</p>
+        <p className="mt-4 text-sm text-red-700">{error}</p>
       )}
 
       {result && <LookupResult result={result} />}

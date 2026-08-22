@@ -22,7 +22,7 @@ export function AttackSimulator() {
   return (
     <div className="card p-6 sm:p-7">
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-ink-50">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-800 text-ink-50">
           <ShieldCheck className="h-4 w-4" />
         </span>
         <div>
@@ -41,10 +41,10 @@ export function AttackSimulator() {
             key={s.id}
             type="button"
             onClick={() => router.push(`/analyze?scenario=${s.id}`)}
-            className="group flex flex-col gap-2 rounded-xl border border-ink-800 bg-ink-950/40 p-4 text-left transition hover:border-brand-700 hover:bg-brand-950/30"
+            className="group flex flex-col gap-2 rounded-xl border border-ink-800 bg-ink-950/40 p-4 text-left transition hover:border-brand-300 hover:bg-brand-50"
           >
             <div className="flex items-center gap-2.5">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-950 text-brand-400 group-hover:bg-brand-900">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-950 text-brand-600 group-hover:bg-brand-900">
                 {ICONS[s.id]}
               </span>
               <div className="min-w-0">

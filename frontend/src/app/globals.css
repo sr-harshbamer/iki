@@ -3,7 +3,12 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  /* Bumps the rem base from 16px to ~17px so Tailwind's whole type scale
+     (text-sm/base/lg/...) reads at the larger, more comfortable sizes this
+     product needs for elderly and low-vision users, without rewriting every
+     component's font-size class individually. */
+  font-size: 106.25%;
 }
 
 html, body {
@@ -12,7 +17,22 @@ html, body {
 }
 
 ::selection {
-  @apply bg-brand-800 text-brand-50;
+  @apply bg-brand-200 text-brand-900;
+}
+
+/* Consistent, visible keyboard-focus ring everywhere, not just on elements
+   that already opt in via focus-visible utility classes. */
+:focus-visible {
+  outline: 2px solid theme("colors.brand.500");
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @layer components {
@@ -28,45 +48,52 @@ html, body {
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
-           text-sm font-medium transition focus:outline-none
+    /* min-h/min-w keep every button at or above the WCAG 2.2 44x44px
+       touch-target minimum, even short-label ones like icon-only buttons. */
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 py-3
+           text-[15px] font-semibold transition focus:outline-none
            focus-visible:ring-2 focus-visible:ring-brand-500
            focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 disabled:opacity-50
            disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-white text-ink-950 hover:bg-ink-100;
+    @apply btn bg-ink-50 text-white hover:bg-ink-100;
   }
   .btn-brand {
-    @apply btn bg-brand-500 text-white hover:bg-brand-400 shadow-glow;
+    @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-glow;
   }
   .btn-outline {
-    @apply btn border border-ink-700 bg-transparent text-ink-100 hover:bg-ink-900;
+    @apply btn border border-ink-700 bg-transparent text-ink-100 hover:bg-ink-800/60;
   }
   .btn-ghost {
-    @apply btn text-ink-300 hover:bg-ink-900 hover:text-ink-50;
+    @apply btn text-ink-300 hover:bg-ink-800/60 hover:text-ink-50;
+  }
+  .btn-danger {
+    @apply btn bg-severity-scam text-white hover:bg-red-800;
   }
 
   .input {
-    @apply w-full rounded-xl border border-ink-800 bg-ink-950 px-4 py-3 text-sm
-           text-ink-50 placeholder:text-ink-600
-           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-900/60;
+    @apply w-full rounded-xl border border-ink-800 bg-ink-900 px-4 py-3 text-[15px]
+           text-ink-50 placeholder:text-ink-500
+           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200;
   }
 
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-ink-700
-           bg-ink-900 px-2.5 py-1 text-xs font-medium text-ink-200;
+           bg-ink-900 px-2.5 py-1 text-xs font-semibold text-ink-200;
   }
 
   .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.14em] text-brand-400;
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-brand-600;
   }
 
   .hairline { @apply border-t border-ink-800; }
 
-  /* Highlighted suspicious phrase inside original content */
+  /* Highlighted suspicious phrase inside original content — dark amber text
+     on a light amber wash reads at AA contrast; the same pairing used for
+     "Suspicious" severity elsewhere so the color always means the same thing. */
   .phrase-highlight {
-    @apply rounded bg-amber-500/20 px-1 text-amber-300 ring-1 ring-amber-500/30;
+    @apply rounded bg-amber-100 px-1 font-medium text-amber-900 ring-1 ring-amber-300;
   }
 
   .animate-verdict-in {

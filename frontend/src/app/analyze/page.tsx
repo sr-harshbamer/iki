@@ -217,7 +217,7 @@ function AnalyzePageContent() {
       </section>
 
       {/* ── Input ───────────────────────────────────────────────── */}
-      <section className="bg-black/20 py-10">
+      <section className="bg-ink-900 py-10">
         <div className="container-wide space-y-6">
           <ModeTabs value={mode} onChange={setMode} />
 
@@ -229,7 +229,7 @@ function AnalyzePageContent() {
                     type="button"
                     onClick={() => setShowScanner(true)}
                     disabled={loading}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-800 bg-brand-950/50 px-4 py-3 text-sm font-semibold text-brand-300 transition hover:bg-brand-900/50 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-300 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-800 transition hover:bg-brand-100 disabled:opacity-50"
                   >
                     <QrCode className="h-4 w-4" />
                     Scan a QR code with your camera
@@ -326,7 +326,7 @@ function AnalyzePageContent() {
       </section>
 
       {/* ── Result ──────────────────────────────────────────────── */}
-      <section ref={resultRef} className="bg-black/20 pb-20">
+      <section ref={resultRef} className="bg-ink-900 pb-20">
         <div className="container-wide">
           {loading ? (
             <AnalyzingSequence mode={mode} />
@@ -363,7 +363,7 @@ function EmptyState({ mode }: { mode: AnalysisMode }) {
 
   return (
     <div className="card flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-950 text-brand-400">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-950 text-brand-600">
         <Search className="h-5 w-5" />
       </span>
       <h2 className="text-lg font-semibold text-ink-50">

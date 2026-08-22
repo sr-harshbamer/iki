@@ -27,14 +27,14 @@ const SCRIPTED_ATTACK = [
 function decisionTheme(level: DecisionRiskLevel) {
   switch (level) {
     case "Low":
-      return "border-emerald-800/60 bg-emerald-950/30 text-emerald-300";
+      return "border-emerald-300 bg-emerald-50 text-emerald-800";
     case "Moderate":
-      return "border-amber-800/60 bg-amber-950/30 text-amber-300";
+      return "border-amber-300 bg-amber-50 text-amber-800";
     case "High":
-      return "border-red-800/60 bg-red-950/30 text-red-300";
+      return "border-red-300 bg-red-50 text-red-800";
     case "Critical":
     default:
-      return "border-red-700 bg-red-950/50 text-red-200";
+      return "border-red-400 bg-red-100 text-red-900";
   }
 }
 
@@ -77,7 +77,7 @@ export default function LiveGuardPage() {
           </p>
           <div className="mt-4 flex items-center gap-2 text-sm">
             {live.connected ? (
-              <span className="inline-flex items-center gap-1.5 text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 text-emerald-700">
                 <Wifi className="h-4 w-4" /> Live connection open
               </span>
             ) : (
@@ -89,7 +89,7 @@ export default function LiveGuardPage() {
         </div>
       </section>
 
-      <section className="bg-black/20 py-10">
+      <section className="bg-ink-900 py-10">
         <div className="container-wide grid gap-6 lg:grid-cols-5">
           {/* ── Conversation ─────────────────────────────────────── */}
           <div className="card flex flex-col p-6 lg:col-span-3">
@@ -166,7 +166,7 @@ export default function LiveGuardPage() {
           {/* ── Live risk panel ──────────────────────────────────── */}
           <div className="space-y-4 lg:col-span-2">
             {live.escalated && (
-              <div className="card flex items-start gap-3 border border-red-700 bg-red-950/50 p-4 text-red-200 ring-1 ring-red-700">
+              <div className="card flex items-start gap-3 border border-red-400 bg-red-100 p-4 text-red-900 ring-1 ring-red-400">
                 <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />
                 <div>
                   <div className="text-sm font-semibold">Protection activated</div>
@@ -234,7 +234,7 @@ export default function LiveGuardPage() {
             )}
 
             {live.attackForecast && (
-              <div className="card bg-ink-900 ring-1 ring-brand-800/50 p-5 text-white">
+              <div className="card bg-brand-900 ring-1 ring-brand-700/60 p-5 text-white">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/60">
                   <Radar className="h-3.5 w-3.5" /> Attack forecast
                 </div>

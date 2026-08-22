@@ -338,9 +338,9 @@ export default function SuSagiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink-950 text-ink-50 font-sans pb-16">
+    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans pb-16">
       {/* Dynamic Header */}
-      <header className="border-b border-ink-800 bg-ink-900/60 backdrop-blur-md sticky top-0 z-40">
+      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
@@ -350,7 +350,7 @@ export default function SuSagiPage() {
               <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
                 SuSagi <span className="text-[10px] uppercase bg-cyan-950 text-cyan-400 font-semibold px-2 py-0.5 rounded-full border border-cyan-800">Local Shield</span>
               </h1>
-              <p className="text-xs text-ink-400">Offline Scam & Impersonation Interceptor</p>
+              <p className="text-xs text-slate-400">Offline Scam & Impersonation Interceptor</p>
             </div>
           </div>
           
@@ -361,14 +361,14 @@ export default function SuSagiPage() {
                 ? "bg-emerald-950/60 text-emerald-400 border-emerald-800" 
                 : wsStatus === "connecting"
                 ? "bg-amber-950/60 text-amber-400 border-amber-800"
-                : "bg-ink-900 text-ink-500 border-ink-800"
+                : "bg-slate-900 text-slate-500 border-slate-800"
             }`}>
               <span className={`h-2 w-2 rounded-full ${
                 wsStatus === "connected" 
                   ? "bg-emerald-400 animate-pulse" 
                   : wsStatus === "connecting"
                   ? "bg-amber-400 animate-pulse"
-                  : "bg-ink-600"
+                  : "bg-slate-600"
               }`} />
               {wsStatus === "connected" ? "Shield Active" : wsStatus === "connecting" ? "Connecting..." : "Shield Standby"}
             </span>
@@ -414,25 +414,25 @@ export default function SuSagiPage() {
           <div className="md:col-span-1 space-y-6">
 
             {/* Behavioral Profile picker -- who is this call supposed to be? */}
-            <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5 space-y-3">
-              <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider flex items-center gap-2">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
+              <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <UserCheck className="h-4 w-4 text-cyan-400" /> Who is calling?
               </h2>
-              <p className="text-xs text-ink-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Tier 2 checks whether this call actually sounds like the person it claims to be.
               </p>
               <select
                 value={selectedProfileId ?? ""}
                 onChange={(e) => setSelectedProfileId(Number(e.target.value))}
                 disabled={isScanning}
-                className="w-full rounded-xl bg-ink-950 border border-ink-800 px-3 py-2.5 text-sm text-ink-100 disabled:opacity-50"
+                className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-sm text-slate-100 disabled:opacity-50"
               >
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>{p.name} ({p.relationship_role})</option>
                 ))}
               </select>
               {selectedProfile && (
-                <p className="text-[11px] text-ink-500 leading-relaxed">
+                <p className="text-[11px] text-slate-500 leading-relaxed">
                   Never asks for: {selectedProfile.never_asks_for.join(", ")}
                 </p>
               )}
@@ -441,35 +441,35 @@ export default function SuSagiPage() {
                 <button
                   onClick={() => setShowNewProfile(true)}
                   disabled={isScanning}
-                  className="w-full py-2 rounded-lg border border-dashed border-ink-700 text-ink-400 hover:text-cyan-400 hover:border-cyan-800 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40"
+                  className="w-full py-2 rounded-lg border border-dashed border-slate-700 text-slate-400 hover:text-cyan-400 hover:border-cyan-800 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add a trusted contact
                 </button>
               ) : (
-                <div className="space-y-2 pt-1 border-t border-ink-800">
+                <div className="space-y-2 pt-1 border-t border-slate-800">
                   <input
                     placeholder="Name (e.g. Priya)"
                     value={newProfile.name}
                     onChange={(e) => setNewProfile((p) => ({ ...p, name: e.target.value }))}
-                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600"
                   />
                   <input
                     placeholder="Relationship (e.g. Sister)"
                     value={newProfile.relationship_role}
                     onChange={(e) => setNewProfile((p) => ({ ...p, relationship_role: e.target.value }))}
-                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600"
                   />
                   <input
                     placeholder="Normally sounds like... (optional)"
                     value={newProfile.expected_style}
                     onChange={(e) => setNewProfile((p) => ({ ...p, expected_style: e.target.value }))}
-                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600"
                   />
                   <input
                     placeholder="Would never ask for (comma-separated)"
                     value={newProfile.never_asks_for}
                     onChange={(e) => setNewProfile((p) => ({ ...p, never_asks_for: e.target.value }))}
-                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                    className="w-full rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600"
                   />
                   <div className="flex gap-2">
                     <button
@@ -481,7 +481,7 @@ export default function SuSagiPage() {
                     </button>
                     <button
                       onClick={() => setShowNewProfile(false)}
-                      className="px-3 py-1.5 rounded-lg border border-ink-700 text-ink-400 text-xs"
+                      className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 text-xs"
                     >
                       Cancel
                     </button>
@@ -491,8 +491,8 @@ export default function SuSagiPage() {
             </div>
 
             {/* Core Controls */}
-            <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5 space-y-4">
-              <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider">Console Controls</h2>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
+              <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Console Controls</h2>
               
               {!isScanning ? (
                 <div className="space-y-3">
@@ -504,7 +504,7 @@ export default function SuSagiPage() {
                   </button>
                   <button 
                     onClick={startMockReplay}
-                    className="w-full py-3 px-4 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-100 font-semibold flex items-center justify-center gap-2 border border-ink-700 shadow-sm transition-all active:scale-[0.98]"
+                    className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold flex items-center justify-center gap-2 border border-slate-700 shadow-sm transition-all active:scale-[0.98]"
                   >
                     <Play className="h-4 w-4" /> Replay Test Call
                   </button>
@@ -521,15 +521,15 @@ export default function SuSagiPage() {
               <button 
                 onClick={resetAll}
                 disabled={!isScanning && score === 0}
-                className="w-full py-2.5 px-4 rounded-xl bg-ink-950 text-ink-400 hover:text-ink-200 border border-ink-800 flex items-center justify-center gap-2 hover:bg-ink-900 disabled:opacity-40 transition-all text-sm"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800 flex items-center justify-center gap-2 hover:bg-slate-900 disabled:opacity-40 transition-all text-sm"
               >
                 <Trash2 className="h-4 w-4" /> Reset Score & Logs
               </button>
             </div>
 
             {/* Glowing Risk Bar */}
-            <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5 text-center flex flex-col items-center">
-              <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider mb-4 self-start">Live Risk Index</h2>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 text-center flex flex-col items-center">
+              <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 self-start">Live Risk Index</h2>
               
               <div className="relative w-36 h-36 flex items-center justify-center mb-4">
                 {/* Score Circle Ring */}
@@ -537,7 +537,7 @@ export default function SuSagiPage() {
                   <circle 
                     cx="50" cy="50" r="42" 
                     fill="transparent" 
-                    className="stroke-ink-800" 
+                    className="stroke-slate-800" 
                     strokeWidth="8"
                   />
                   <circle 
@@ -560,7 +560,7 @@ export default function SuSagiPage() {
                   }`}>
                     {score}%
                   </span>
-                  <span className="text-[9px] uppercase tracking-widest text-ink-400 font-bold mt-1">SCAM INDEX</span>
+                  <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold mt-1">SCAM INDEX</span>
                 </div>
               </div>
               
@@ -581,9 +581,9 @@ export default function SuSagiPage() {
           <div className="md:col-span-2 space-y-6">
             
             {/* Live Transcript Monitor */}
-            <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-6 space-y-3">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                   <Activity className="h-4 w-4 text-cyan-400 animate-pulse" /> Live Call Transcription
                 </h2>
                 {isScanning && (
@@ -594,7 +594,7 @@ export default function SuSagiPage() {
                 )}
               </div>
               
-              <div className="min-h-[120px] max-h-[160px] overflow-y-auto p-4 rounded-xl bg-ink-950 border border-ink-900/60 text-sm leading-relaxed text-ink-200 font-mono">
+              <div className="min-h-[120px] max-h-[160px] overflow-y-auto p-4 rounded-xl bg-slate-950 border border-slate-900/60 text-sm leading-relaxed text-slate-200 font-mono">
                 {transcript}
               </div>
             </div>
@@ -609,11 +609,11 @@ export default function SuSagiPage() {
                 className={`rounded-2xl border p-6 space-y-3 transition-colors ${
                   behavioralScore !== null && behavioralScore >= 60
                     ? "border-red-800 bg-red-950/20"
-                    : "border-ink-800 bg-ink-900/40"
+                    : "border-slate-800 bg-slate-900/40"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-cyan-400" /> Behavioral Match vs. {selectedProfile.name}
                   </h2>
                   {behavioralScore !== null && (
@@ -625,9 +625,9 @@ export default function SuSagiPage() {
                   )}
                 </div>
                 {behavioralReason ? (
-                  <p className="text-sm text-ink-200 leading-relaxed">{behavioralReason}</p>
+                  <p className="text-sm text-slate-200 leading-relaxed">{behavioralReason}</p>
                 ) : (
-                  <p className="text-sm text-ink-500">
+                  <p className="text-sm text-slate-500">
                     Waiting for enough of the call to compare against {selectedProfile.name}&apos;s baseline...
                   </p>
                 )}
@@ -635,12 +635,12 @@ export default function SuSagiPage() {
             )}
 
             {/* Evidence Feed Timeline */}
-            <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-6 space-y-4">
-              <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider">Scam Indicators & Evidence Log</h2>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">
+              <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Scam Indicators & Evidence Log</h2>
               
               <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
                 {evidenceLog.length === 0 ? (
-                  <div className="text-center py-8 text-ink-500 text-sm">
+                  <div className="text-center py-8 text-slate-500 text-sm">
                     Awaiting conversational evaluation logs...
                   </div>
                 ) : (
@@ -656,7 +656,7 @@ export default function SuSagiPage() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-mono text-ink-400 bg-ink-950 px-2 py-1 rounded border border-ink-800">
+                        <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-800">
                           {log.time}
                         </span>
                         <p className="font-medium">{log.why}</p>
@@ -690,7 +690,7 @@ export default function SuSagiPage() {
                 </p>
               </div>
 
-              <div className="p-4 bg-ink-950 border border-red-900/50 rounded-2xl text-left space-y-2.5 text-xs text-red-200">
+              <div className="p-4 bg-slate-950 border border-red-900/50 rounded-2xl text-left space-y-2.5 text-xs text-red-200">
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                   <p><strong>Mobile Wallet API</strong>: FROZEN & LOCKED</p>

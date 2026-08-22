@@ -60,7 +60,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── What SuSagi analyses ──────────────────────────────── */}
-      <section className="bg-black/20 py-16">
+      <section className="bg-ink-900 py-16">
         <div className="container-wide">
           <div className="max-w-2xl">
             <span className="eyebrow">How SuSagi analyses content</span>
@@ -155,7 +155,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── Principles ──────────────────────────────────────────── */}
-      <section className="bg-black/20 py-16">
+      <section className="bg-ink-900 py-16">
         <div className="container-wide grid gap-8 lg:grid-cols-3">
           <Principle
             title="Explainability over certainty"
@@ -247,7 +247,7 @@ function MethodCard({
 }) {
   return (
     <article id={id} className="bg-ink-950/60 p-8 transition hover:bg-ink-900/40">
-      <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-950 text-brand-400">
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-950 text-brand-600">
         {icon}
       </span>
       <h3 className="mt-4 text-lg font-semibold text-ink-50">{title}</h3>
@@ -272,7 +272,7 @@ function LayerCard({
       <span className="grid h-10 w-10 place-items-center rounded-lg border border-ink-700 text-sm font-bold text-ink-50">
         {n}
       </span>
-      <div className="mt-4 flex items-center gap-2 text-brand-400">
+      <div className="mt-4 flex items-center gap-2 text-brand-600">
         {icon}
         <h3 className="text-base font-semibold text-ink-50">{title}</h3>
       </div>
@@ -301,7 +301,7 @@ function Audience({
 }) {
   return (
     <li className="flex gap-4">
-      <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-950 text-brand-400">
+      <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-950 text-brand-600">
         {icon}
       </span>
       <div>
