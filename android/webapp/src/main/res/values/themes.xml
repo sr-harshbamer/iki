@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SuSagiWeb" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/ink_950</item>
+        <item name="android:windowBackground">@color/ink_950</item>
+        <item name="android:navigationBarColor">@color/ink_950</item>
+        <item name="colorPrimary">@color/brand_600</item>
+        <item name="colorAccent">@color/brand_500</item>
+    </style>
+</resources>

@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SuSagiVoiceGuard"
 include(":app")
+include(":webapp")
