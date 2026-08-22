@@ -88,12 +88,12 @@ export function RiskVerdictPanel({
               barClass={theme.bar}
             />
             <div className="text-sm">
-              <div className="text-ink-500">Risk score</div>
+              <div className="font-medium text-ink-600">Risk score</div>
               <div className="mt-1 text-3xl font-semibold text-ink-900">
                 {result.risk_score}
                 <span className="text-lg text-ink-400">/100</span>
               </div>
-              <div className="mt-1 text-xs text-ink-500">
+              <div className="mt-1 text-xs text-ink-600">
                 Confidence {result.confidence_low}–{result.confidence_high}
               </div>
             </div>
@@ -104,7 +104,7 @@ export function RiskVerdictPanel({
       {/* ── Analyzed content with highlights ─────────────────────── */}
       <div className="card p-6 sm:p-7">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-500">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-600">
             Analyzed content
           </h3>
           {result.highlighted_phrases.length > 0 && (
@@ -334,11 +334,11 @@ function SignalList({ result }: { result: AnalysisResult }) {
                 </div>
                 <span
                   className={cn(
-                    "shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
-                    s.severity === "critical" && "border-red-300 bg-red-50 text-red-900",
-                    s.severity === "high" && "border-red-200 bg-red-50 text-red-800",
-                    s.severity === "medium" && "border-amber-200 bg-amber-50 text-amber-900",
-                    s.severity === "low" && "border-lime-200 bg-lime-50 text-lime-800",
+                    "shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide",
+                    s.severity === "critical" && "border-red-700 bg-red-700 text-white",
+                    s.severity === "high" && "border-red-600 bg-red-600 text-white",
+                    s.severity === "medium" && "border-amber-300 bg-amber-100 text-amber-900",
+                    s.severity === "low" && "border-lime-300 bg-lime-100 text-lime-900",
                   )}
                 >
                   {st.label}
@@ -404,7 +404,7 @@ function DecisionRiskCard({
             <div className="text-xl font-semibold tabular-nums text-ink-900">
               {decisionRisk.scam_probability}%
             </div>
-            <div className="mt-1 text-[11px] uppercase tracking-wide text-ink-500">
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-600">
               Scam probability
             </div>
           </div>
@@ -412,7 +412,7 @@ function DecisionRiskCard({
             <div className="text-xl font-semibold text-ink-900">
               {decisionRisk.potential_consequence}
             </div>
-            <div className="mt-1 text-[11px] uppercase tracking-wide text-ink-500">
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-600">
               Potential loss
             </div>
           </div>
@@ -421,7 +421,7 @@ function DecisionRiskCard({
               <Undo2 className="h-3.5 w-3.5 text-ink-400" />
               {decisionRisk.reversibility_score}
             </div>
-            <div className="mt-1 text-[11px] uppercase tracking-wide text-ink-500">
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-600">
               Reversibility
             </div>
           </div>
@@ -460,7 +460,7 @@ function AttackForecastCard({
           </div>
         </div>
         <div className="mt-5">
-          <div className="text-[11px] uppercase tracking-wide text-white/50">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-white/70">
             Likely next step
           </div>
           <p className="mt-1.5 text-lg font-semibold leading-snug text-white">
@@ -473,10 +473,10 @@ function AttackForecastCard({
           </div>
         </div>
         <div className="mt-5 border-t border-white/10 pt-4">
-          <div className="text-[11px] uppercase tracking-wide text-white/50">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-white/70">
             Potential outcome
           </div>
-          <p className="mt-1.5 text-sm leading-relaxed text-white/80">
+          <p className="mt-1.5 text-[15px] leading-relaxed text-white/90">
             {forecast.potential_outcome}
           </p>
         </div>
@@ -525,10 +525,10 @@ function ExplanationCard({
           <p className="text-xs text-ink-500">{subtitle}</p>
         </div>
       </div>
-      <ul className="mt-5 space-y-3 text-sm leading-relaxed text-ink-700">
+      <ul className="mt-5 space-y-3.5 text-[15px] leading-relaxed text-ink-700">
         {items.map((item, i) => (
           <li key={i} className="flex gap-3">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-400" />
+            <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-400" />
             <span>{item}</span>
           </li>
         ))}
