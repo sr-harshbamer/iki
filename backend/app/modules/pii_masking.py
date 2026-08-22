@@ -3,8 +3,8 @@ import re
 # Regex for Email Addresses
 EMAIL_REGEX = re.compile(r'([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)')
 
-# Regex for Phone Numbers (supports 10-digit contiguous, 5-5 split, and 3-3-4 split with country codes)
-PHONE_REGEX = re.compile(r'(?:\+?\d{1,3}[-.\s]?)?(?:\d{10}\b|\d{5}[-.\s]?\d{5}\b|\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b)')
+# Regex for Phone Numbers (supports contiguous 10, 5-5 splits, and 3-3-4 split with optional parenthesized area codes)
+PHONE_REGEX = re.compile(r'(?:\+?\d{1,3}[-.\s]?)?(?:\d{10}\b|\d{5}[-.\s]?\d{5}\b|\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b)')
 
 # Regex for UPI handles (e.g., payee@bankname)
 UPI_REGEX = re.compile(r'\b[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}\b')
