@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Iterator, List, Optional
 
 from .schemas import AnalysisResult
+from .pii_masking import mask_pii
+
 
 
 DB_PATH = Path(__file__).resolve().parent.parent.parent / "susagi.db"
@@ -89,8 +91,10 @@ def save_analysis(content_preview: str, result: AnalysisResult) -> None:
     signal_ids = [s.id for s in result.signals]
     evidence = []
     for s in result.signals:
-        evidence.extend(s.evidence[:2])
+        evidence.extend([mask_pii(ev) for ev in s.evidence[:2]])
     evidence = evidence[:8]
+
+    masked_preview = mask_pii(content_preview)
 
     with _conn() as cx:
         cx.execute(
@@ -105,7 +109,7 @@ def save_analysis(content_preview: str, result: AnalysisResult) -> None:
                 result.threat_category.value,
                 json.dumps(signal_ids),
                 json.dumps(evidence),
-                content_preview[:240],
+                masked_preview[:240],
                 datetime.utcnow().isoformat(timespec="seconds") + "Z",
             ),
         )
@@ -208,6 +212,7 @@ def update_sender_profile(sender_id: str, result: AnalysisResult) -> None:
 
 
 def log_escalation(content_preview: str, result: AnalysisResult, notified_webhook: bool) -> None:
+    masked_preview = mask_pii(content_preview)
     with _conn() as cx:
         cx.execute(
             """INSERT INTO escalations
@@ -218,7 +223,7 @@ def log_escalation(content_preview: str, result: AnalysisResult, notified_webhoo
                 result.risk_level.value,
                 result.risk_score,
                 result.threat_category.value,
-                content_preview[:240],
+                masked_preview[:240],
                 1 if notified_webhook else 0,
                 datetime.utcnow().isoformat(timespec="seconds") + "Z",
             ),
@@ -231,6 +236,7 @@ def log_voice_escalation(preview: str, risk_level: str, score: int, notified: bo
     no discrete `Signal`s in a voice call, just a rolling score), so this
     takes the handful of fields that actually apply instead of forcing a
     shape that doesn't fit."""
+    masked_preview = mask_pii(preview)
     with _conn() as cx:
         cx.execute(
             """INSERT INTO escalations
@@ -241,7 +247,7 @@ def log_voice_escalation(preview: str, risk_level: str, score: int, notified: bo
                 risk_level,
                 score,
                 "Impersonation",
-                preview[:240],
+                masked_preview[:240],
                 1 if notified else 0,
                 datetime.utcnow().isoformat(timespec="seconds") + "Z",
             ),
