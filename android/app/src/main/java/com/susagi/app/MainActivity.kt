@@ -122,6 +122,22 @@ fun VoiceGuardScreen(
 
         Spacer(Modifier.height(10.dp))
 
+        OutlinedButton(
+            onClick = {
+                prefs.edit().putString("base_url", baseUrl).apply()
+                context.startActivity(
+                    android.content.Intent(context, QrScanActivity::class.java)
+                        .putExtra("base_url", baseUrl),
+                )
+            },
+            enabled = baseUrl.isNotBlank(),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Scan a QR code")
+        }
+
+        Spacer(Modifier.height(10.dp))
+
         Button(
             onClick = {
                 loading = true

@@ -238,6 +238,7 @@ class CallMonitorService : Service() {
         audioRecord = null
         webSocket?.close(1000, "call ended or speaker off")
         webSocket = null
+        alreadyAlertedThisCall = false
     }
 
     private fun openWebSocket() {
@@ -274,6 +275,11 @@ class CallMonitorService : Service() {
         }
     }
 
+    /** Once per call -- a live conversation that stays above threshold
+     * would otherwise re-trigger the full-screen interrupt on every
+     * incoming transcript chunk, which is worse than useless. */
+    private var alreadyAlertedThisCall = false
+
     private fun createNotificationChannels() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(
@@ -297,10 +303,26 @@ class CallMonitorService : Service() {
         nm.notify(NOTIF_ID_PERSISTENT, buildPersistentNotification(state.value.statusText))
     }
 
-    /** The user is mid-call and not looking at the app -- a high-priority
-     * notification (heads-up + sound) is the only reliable way to reach
-     * them, so this is used instead of any in-app-only UI state. */
+    /** The user is mid-call and not looking at this app -- a plain
+     * notification would just sit in the shade until they happen to check
+     * their phone. A fullScreenIntent is the mechanism Android reserves
+     * for exactly this (incoming calls, alarms): it interrupts whatever's
+     * currently on screen -- the live call included -- to show
+     * CallAlertActivity immediately. */
     private fun showCriticalAlert(title: String, body: String) {
+        if (alreadyAlertedThisCall) return
+        alreadyAlertedThisCall = true
+
+        val fullScreenIntent = Intent(this, CallAlertActivity::class.java).apply {
+            putExtra(CallAlertActivity.EXTRA_TITLE, title)
+            putExtra(CallAlertActivity.EXTRA_REASON, body)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            this, 0, fullScreenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(this, CHANNEL_ID_ALERT)
             .setContentTitle(title)
@@ -309,8 +331,15 @@ class CallMonitorService : Service() {
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
             .setAutoCancel(true)
             .build()
         nm.notify(NOTIF_ID_ALERT, notification)
+
+        // Some launchers/OEM skins ignore fullScreenIntent while the app's
+        // own process is already running in the foreground -- starting the
+        // activity directly as a fallback costs nothing and guarantees it
+        // actually appears in that case.
+        startActivity(fullScreenIntent)
     }
 }

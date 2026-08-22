@@ -44,3 +44,4 @@ android/app/build/
 android/build/
 android/.idea/
 android/*.iml
+apk_download/

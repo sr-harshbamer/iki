@@ -1,8 +1,11 @@
 package com.susagi.app
 
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
+import org.json.JSONObject
 
 data class BehavioralProfile(
     val id: Int,
@@ -10,6 +13,15 @@ data class BehavioralProfile(
     val relationshipRole: String,
     val neverAsksFor: List<String>,
 )
+
+data class QrResult(
+    val riskLevel: String,
+    val riskScore: Int,
+    val threatCategory: String,
+    val reasons: List<String>,
+) {
+    val isSafe: Boolean get() = riskLevel == "Safe" || riskLevel == "Low Risk"
+}
 
 /**
  * Thin wrapper over the exact same REST endpoints the web app already
@@ -40,6 +52,36 @@ object SusagiApi {
                     neverAsksFor = neverAsks,
                 )
             }
+        }
+    }
+
+    /**
+     * The gate: the QR is decoded on-device by ML Kit (QrScanActivity) and
+     * handed here as plain text -- nothing about it is opened yet. This
+     * hits the exact same /api/analyze-qr endpoint the web app's live
+     * camera scanner uses, and the caller only gets to act on the result
+     * afterward, never before.
+     */
+    fun analyzeQr(baseUrl: String, content: String): QrResult {
+        val body = JSONObject().put("content", content).toString()
+            .toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+            .url("${baseUrl.trimEnd('/')}/api/analyze-qr")
+            .post(body)
+            .build()
+        client.newCall(request).execute().use { resp ->
+            if (!resp.isSuccessful) throw java.io.IOException("HTTP ${resp.code}")
+            val json = JSONObject(resp.body?.string() ?: "{}")
+            val result = json.getJSONObject("result")
+            val reasons = mutableListOf<String>()
+            val why = result.optJSONArray("why_flagged")
+            if (why != null) for (i in 0 until why.length()) reasons.add(why.getString(i))
+            return QrResult(
+                riskLevel = result.getString("risk_level"),
+                riskScore = result.getInt("risk_score"),
+                threatCategory = result.getString("threat_category"),
+                reasons = reasons,
+            )
         }
     }
 
