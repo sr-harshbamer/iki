@@ -431,11 +431,37 @@ function SectionHeader({
   );
 }
 
+/**
+ * Repeated checks of the same content (someone re-verifying a forwarded
+ * scam, or the same campaign hitting multiple people) would otherwise show
+ * as identical rows back to back -- collapse consecutive duplicates into
+ * one row with a "seen N times" count instead of a wall of repeats.
+ */
+function dedupeConsecutive(
+  items: EscalationItem[],
+): (EscalationItem & { count: number })[] {
+  const out: (EscalationItem & { count: number })[] = [];
+  for (const item of items) {
+    const last = out[out.length - 1];
+    if (
+      last &&
+      last.threat_category === item.threat_category &&
+      last.preview === item.preview
+    ) {
+      last.count += 1;
+    } else {
+      out.push({ ...item, count: 1 });
+    }
+  }
+  return out;
+}
+
 function EscalationsCard({
   escalations,
 }: {
   escalations: EscalationItem[] | null;
 }) {
+  const rows = escalations ? dedupeConsecutive(escalations) : null;
   return (
     <div className="card p-6">
       <SectionHeader
@@ -443,16 +469,16 @@ function EscalationsCard({
         title="Escalations"
         subtitle="Likely Scam / High Risk verdicts flagged for a trusted contact"
       />
-      {!escalations ? (
+      {!rows ? (
         <EmptyBlock />
-      ) : escalations.length === 0 ? (
+      ) : rows.length === 0 ? (
         <p className="mt-4 text-sm text-ink-500">
           No escalations yet. A message scored Likely Scam or High Risk will
           appear here automatically.
         </p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {escalations.map((e, i) => {
+          {rows.map((e, i) => {
             const theme = riskTheme(e.risk_level as RiskLevel);
             return (
               <li
@@ -463,6 +489,11 @@ function EscalationsCard({
                   <span className={cn("chip border shrink-0", theme.chip)}>
                     {e.risk_level}
                   </span>
+                  {e.count > 1 && (
+                    <span className="chip shrink-0 border-ink-200 bg-ink-50 text-ink-600">
+                      seen {e.count}×
+                    </span>
+                  )}
                   <span className="truncate text-sm text-ink-700">
                     {e.threat_category} · {e.preview}
                   </span>
