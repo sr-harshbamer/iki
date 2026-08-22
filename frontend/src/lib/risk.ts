@@ -8,7 +8,7 @@ export function riskTheme(level: RiskLevel) {
         accent: "text-severity-safe",
         bg: "bg-emerald-50",
         ring: "ring-emerald-200",
-        bar: "bg-severity-safe",
+        bar: "text-severity-safe",
         chip: "bg-emerald-50 text-emerald-800 border-emerald-200",
         headline: "No red flags detected",
       };
@@ -18,7 +18,7 @@ export function riskTheme(level: RiskLevel) {
         accent: "text-severity-low",
         bg: "bg-lime-50",
         ring: "ring-lime-200",
-        bar: "bg-severity-low",
+        bar: "text-severity-low",
         chip: "bg-lime-50 text-lime-800 border-lime-200",
         headline: "Low-risk indicators present",
       };
@@ -28,7 +28,7 @@ export function riskTheme(level: RiskLevel) {
         accent: "text-severity-suspicious",
         bg: "bg-amber-50",
         ring: "ring-amber-200",
-        bar: "bg-severity-suspicious",
+        bar: "text-severity-suspicious",
         chip: "bg-amber-50 text-amber-900 border-amber-200",
         headline: "Proceed with caution",
       };
@@ -38,7 +38,7 @@ export function riskTheme(level: RiskLevel) {
         accent: "text-severity-scam",
         bg: "bg-red-50",
         ring: "ring-red-200",
-        bar: "bg-severity-scam",
+        bar: "text-severity-scam",
         chip: "bg-red-50 text-red-800 border-red-200",
         headline: "Strong scam indicators",
       };
@@ -49,7 +49,7 @@ export function riskTheme(level: RiskLevel) {
         accent: "text-severity-high",
         bg: "bg-red-100",
         ring: "ring-red-300",
-        bar: "bg-severity-high",
+        bar: "text-severity-high",
         chip: "bg-red-100 text-red-900 border-red-300",
         headline: "Do not engage",
       };

@@ -17,6 +17,7 @@ import {
   TriangleAlert,
   Undo2,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { HighlightedContent } from "./HighlightedContent";
 
 /**
@@ -38,7 +39,7 @@ export function RiskVerdictPanel({
   return (
     <section
       aria-labelledby="verdict-heading"
-      className="space-y-6"
+      className="animate-verdict-in space-y-6"
     >
       {/* ── Verdict header card ───────────────────────────────────── */}
       <div
@@ -89,8 +90,8 @@ export function RiskVerdictPanel({
             />
             <div className="text-sm">
               <div className="font-medium text-ink-600">Risk score</div>
-              <div className="mt-1 text-3xl font-semibold text-ink-900">
-                {result.risk_score}
+              <div className="mt-1 text-3xl font-semibold tabular-nums text-ink-900">
+                <AnimatedScore target={result.risk_score} />
                 <span className="text-lg text-ink-400">/100</span>
               </div>
               <div className="mt-1 text-xs text-ink-600">
@@ -202,6 +203,39 @@ function VerdictIcon({ level }: { level: AnalysisResult["risk_level"] }) {
   }
 }
 
+/**
+ * Counts up from 0 to `target` once on mount, easing out. The caller keys
+ * this component's ancestor by something unique per analysis so React
+ * remounts it (and restarts the animation) on every new result, not just
+ * the first one.
+ */
+function useCountUp(target: number, durationMs = 900): number {
+  const [value, setValue] = useState(0);
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    let raf = 0;
+    const tick = (now: number) => {
+      if (startRef.current === null) startRef.current = now;
+      const elapsed = now - startRef.current;
+      const t = Math.min(1, elapsed / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      setValue(Math.round(eased * target));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, durationMs]);
+
+  return value;
+}
+
+function AnimatedScore({ target }: { target: number }) {
+  const value = useCountUp(target);
+  return <>{value}</>;
+}
+
 function ScoreDial({
   score,
   low,
@@ -218,9 +252,23 @@ function ScoreDial({
   const stroke = 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const lowOffset = circumference - (low / 100) * circumference;
-  const highOffset = circumference - (high / 100) * circumference;
+
+  const [filled, setFilled] = useState(false);
+  useEffect(() => {
+    // Start the ring at 0 and flip to the real value one tick after mount
+    // so the browser commits the 0-state first -- without this the CSS
+    // transition has nothing to animate from and just snaps to the target.
+    const t = setTimeout(() => setFilled(true), 30);
+    return () => clearTimeout(t);
+  }, []);
+
+  const animatedScore = filled ? score : 0;
+  const animatedLow = filled ? low : 0;
+  const animatedHigh = filled ? high : 0;
+  const offset = circumference - (animatedScore / 100) * circumference;
+  const lowOffset = circumference - (animatedLow / 100) * circumference;
+  const highOffset = circumference - (animatedHigh / 100) * circumference;
+  const ringTransition = { transition: "stroke-dashoffset 900ms cubic-bezier(0.16, 1, 0.3, 1)" };
 
   return (
     <svg
@@ -249,6 +297,7 @@ function ScoreDial({
         strokeWidth={stroke}
         strokeDasharray={circumference}
         strokeDashoffset={highOffset}
+        style={ringTransition}
         fill="none"
         strokeLinecap="round"
       />
@@ -260,6 +309,7 @@ function ScoreDial({
         strokeWidth={stroke}
         strokeDasharray={circumference}
         strokeDashoffset={lowOffset}
+        style={ringTransition}
         fill="none"
         strokeLinecap="round"
       />
@@ -273,6 +323,7 @@ function ScoreDial({
         strokeWidth={stroke}
         strokeDasharray={circumference}
         strokeDashoffset={offset}
+        style={ringTransition}
         fill="none"
         strokeLinecap="round"
       />

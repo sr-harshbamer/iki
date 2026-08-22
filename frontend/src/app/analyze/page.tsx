@@ -1,5 +1,6 @@
 "use client";
 
+import { AnalyzingSequence } from "@/components/AnalyzingSequence";
 import { ContentInput } from "@/components/ContentInput";
 import { ImageInput } from "@/components/ImageInput";
 import { ModeTabs } from "@/components/ModeTabs";
@@ -66,13 +67,13 @@ function AnalyzePageContent() {
   const runScenario = useCallback(async (scenario: AttackScenario) => {
     setLoading(true);
     setError(null);
+    requestAnimationFrame(() => {
+      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     try {
       const res = await analyze(scenario.mode, scenario.content.trim(), scenario.senderId);
       setResult(res);
       setAnalyzedContent(scenario.content.trim());
-      requestAnimationFrame(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Something went wrong. Please try again.",
@@ -112,13 +113,13 @@ function AnalyzePageContent() {
       setShowScanner(false);
       setLoading(true);
       setError(null);
+      requestAnimationFrame(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       try {
         const res = await analyzeQr(qrContent, senderId);
         setResult(res.result);
         setAnalyzedContent(res.extracted_text);
-        requestAnimationFrame(() => {
-          resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
       } catch (e) {
         setError(
           e instanceof Error ? e.message : "Something went wrong. Please try again.",
@@ -138,18 +139,15 @@ function AnalyzePageContent() {
       }
       setLoading(true);
       setError(null);
+      requestAnimationFrame(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       try {
         const res = await analyzeImage(imageFile, senderId);
         setResult(res.result);
         setAnalyzedContent(
           res.extracted_text || "(no readable text found in this image)",
         );
-        requestAnimationFrame(() => {
-          resultRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        });
       } catch (e) {
         setError(
           e instanceof Error
@@ -169,17 +167,13 @@ function AnalyzePageContent() {
     }
     setLoading(true);
     setError(null);
+    requestAnimationFrame(() => {
+      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     try {
       const res = await analyze(mode, trimmed, senderId);
       setResult(res);
       setAnalyzedContent(trimmed);
-      // Scroll to result on the next frame
-      requestAnimationFrame(() => {
-        resultRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
     } catch (e) {
       setError(
         e instanceof Error
@@ -334,8 +328,18 @@ function AnalyzePageContent() {
       {/* ── Result ──────────────────────────────────────────────── */}
       <section ref={resultRef} className="bg-ink-50 pb-20">
         <div className="container-wide">
-          {result ? (
-            <RiskVerdictPanel result={result} content={analyzedContent} />
+          {loading ? (
+            <AnalyzingSequence mode={mode} />
+          ) : result ? (
+            // Keyed by analyzed_at so a fresh analysis remounts the panel
+            // instead of just re-rendering it -- that's what makes the
+            // score-dial fill and count-up replay every single time,
+            // not just on the very first result.
+            <RiskVerdictPanel
+              key={result.analyzed_at}
+              result={result}
+              content={analyzedContent}
+            />
           ) : (
             <EmptyState mode={mode} />
           )}
