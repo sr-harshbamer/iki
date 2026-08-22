@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors the web app's dark theme tokens (frontend/tailwind.config.js) -->
+    <color name="ink_950">#0A0C1A</color>
+    <color name="ink_900">#14172A</color>
+    <color name="ink_800">#252A3A</color>
+    <color name="ink_400">#8A91A4</color>
+    <color name="ink_50">#F6F7F9</color>
+    <color name="brand_500">#2F9595</color>
+    <color name="brand_600">#22787C</color>
+    <color name="red_700">#B91C1C</color>
+</resources>

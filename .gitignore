@@ -36,3 +36,11 @@ build/
 # Vosk Model
 backend/model/
 
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+android/.idea/
+android/*.iml
