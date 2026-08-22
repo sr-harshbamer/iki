@@ -129,6 +129,24 @@ class SenderLookupResult(BaseModel):
     last_seen: Optional[str] = None
 
 
+class BehavioralProfile(BaseModel):
+    """A trusted contact's communication baseline -- see
+    behavioral_analysis.py for how this is used to catch impersonation."""
+    id: int
+    name: str
+    relationship_role: str
+    expected_style: str
+    never_asks_for: List[str]
+    created_at: str
+
+
+class BehavioralProfileCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=80)
+    relationship_role: str = Field(..., min_length=1, max_length=80)
+    expected_style: str = Field(..., min_length=1, max_length=400)
+    never_asks_for: List[str] = Field(default_factory=list, max_length=20)
+
+
 class QrScanRequest(BaseModel):
     """A QR code already decoded client-side (browser BarcodeDetector during
     a live camera scan) -- no image upload or OCR needed, just the raw

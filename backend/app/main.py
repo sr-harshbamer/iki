@@ -21,6 +21,18 @@ import random
 from typing import List, Optional
 
 from dotenv import load_dotenv
+
+# Must run before any .modules import below -- several of them read API keys
+# (GEMINI_API_KEY, GROQ_API_KEY, ...) as module-level constants at import
+# time via os.environ.get(...), so loading .env any later leaves those
+# modules permanently holding an empty key for the rest of the process,
+# even though the .env file is right there. Every AI-powered layer
+# (vision, semantic analysis, behavioral cross-reference) degrades
+# silently to "no signals found" on a missing key rather than erroring,
+# so this bug was invisible in normal use -- rule-based detection kept
+# working, just without any of the AI layers actually running.
+load_dotenv()
+
 from fastapi import (
     BackgroundTasks,
     FastAPI,
@@ -34,17 +46,27 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from vosk import Model, KaldiRecognizer
 
+from .modules.behavioral_analysis import analyze_behavioral_anomaly
 from .modules.data_access import (
+    create_behavioral_profile,
+    get_behavioral_profile,
     get_sender_profile,
     init_db,
     insights_summary,
+    list_behavioral_profiles,
+    log_voice_escalation,
     recent_escalations,
     recent_history,
     save_analysis,
     update_sender_profile,
 )
 from .modules.decision_risk import assess_decision_risk
-from .modules.escalation_engine import ESCALATION_LEVELS, handle_escalation, should_escalate
+from .modules.escalation_engine import (
+    ESCALATION_LEVELS,
+    handle_escalation,
+    send_telegram_alert,
+    should_escalate,
+)
 from .modules.link_analysis import analyze_link
 from .modules.llm_analysis import analyze_with_llm
 from .modules.message_analysis import analyze_message
@@ -54,6 +76,8 @@ from .modules.schemas import (
     AnalysisMode,
     AnalysisRequest,
     AnalysisResult,
+    BehavioralProfile,
+    BehavioralProfileCreate,
     ImageAnalysisResponse,
     QrScanRequest,
     SenderLookupResult,
@@ -208,6 +232,27 @@ def analyze_qr(req: QrScanRequest, background_tasks: BackgroundTasks) -> ImageAn
     return ImageAnalysisResponse(result=result, extracted_text=content)
 
 
+@app.get("/api/behavioral-profiles", response_model=List[BehavioralProfile])
+def behavioral_profiles() -> List[dict]:
+    """Trusted-contact baselines available to compare a live call against --
+    see /ws/call-stream. Three presets (Dad, My Manager, Bank Officer) are
+    seeded automatically; this list also includes anything created below."""
+    return list_behavioral_profiles()
+
+
+@app.post("/api/behavioral-profiles", response_model=BehavioralProfile)
+def create_profile(req: BehavioralProfileCreate) -> dict:
+    if not req.never_asks_for:
+        raise HTTPException(
+            status_code=400,
+            detail="Add at least one thing this person would never ask for.",
+        )
+    return create_behavioral_profile(
+        req.name.strip(), req.relationship_role.strip(),
+        req.expected_style.strip(), [s.strip() for s in req.never_asks_for if s.strip()],
+    )
+
+
 @app.get("/api/sender-lookup", response_model=SenderLookupResult)
 def sender_lookup(sender_id: str) -> SenderLookupResult:
     """
@@ -351,11 +396,59 @@ def escalations(limit: int = 20) -> list:
     return recent_escalations(limit)
 
 
+async def run_behavioral_check(
+    websocket: WebSocket,
+    profile: Optional[dict],
+    full_transcript: str,
+    state: dict,
+) -> None:
+    """Tier 2 of the Behavioral Impersonation Engine: runs off the main
+    receive loop so it never blocks Tier 1's instant lexicon reaction to
+    the next line. Fires the real protective action (Telegram alert +
+    an Insights escalation record) the first time the impersonation score
+    crosses the critical threshold for this connection."""
+    if not profile:
+        return
+    outcome = await asyncio.to_thread(analyze_behavioral_anomaly, profile, full_transcript)
+    if outcome is None:
+        return
+    b_score, reason = outcome
+    await websocket.send_json({
+        "type": "behavioral_update",
+        "behavioral_score": b_score,
+        "reason": reason,
+        "profile_name": profile["name"],
+    })
+
+    if b_score >= 85 and not state["escalated"]:
+        state["escalated"] = True
+        notified = await asyncio.to_thread(
+            send_telegram_alert,
+            f"[SuSagi Voice Guard] Possible impersonation of {profile['name']} "
+            f"({profile['relationship_role']}) -- {reason}",
+        )
+        await asyncio.to_thread(
+            log_voice_escalation, full_transcript, score_to_level(b_score).value, b_score, notified,
+        )
+        await websocket.send_json({
+            "type": "escalation",
+            "message": f"Protection activated automatically -- this doesn't sound like {profile['name']}.",
+            "notified": notified,
+        })
+
+
 @app.websocket("/api/ws/call-stream-test")
-async def websocket_test_endpoint(websocket: WebSocket):
+async def websocket_test_endpoint(websocket: WebSocket, profile_id: Optional[int] = None):
     await websocket.accept()
     conv_state = ConvState()
-    
+    profile = get_behavioral_profile(profile_id) if profile_id else None
+    state = {"escalated": False}
+
+    # The scripted dialogue always plays out a fake-authority OTP scam
+    # (Tier 1's lexicon strength), regardless of which behavioral profile
+    # is selected for the Tier 2 comparison -- the mismatch between "this
+    # claims to be your manager" and "this sounds like a CBI scam script"
+    # is exactly the kind of deviation the behavioral engine exists to catch.
     dialogue = [
         "Hello, this is Inspector Rahul Sharma calling from the CBI Cyber Crime Investigation Department.",
         "We have detected suspicious activity associated with your card and bank account.",
@@ -364,10 +457,10 @@ async def websocket_test_endpoint(websocket: WebSocket):
         "Open your UPI banking app immediately to verify your identity.",
         "We are sending you a verification code. Share the OTP pin number with me within 2 minutes."
     ]
-    
+
     current_index = 0
     full_transcript = []
-    
+
     try:
         while True:
             try:
@@ -376,18 +469,22 @@ async def websocket_test_endpoint(websocket: WebSocket):
                     conv_state = ConvState()
                     current_index = 0
                     full_transcript = []
+                    state["escalated"] = False
             except asyncio.TimeoutError:
                 pass
-            
+
             if current_index < len(dialogue):
                 current_sentence = dialogue[current_index]
                 full_transcript.append(current_sentence)
                 score, evidence = conv_state.update(current_sentence)
                 current_index += 1
+                asyncio.create_task(
+                    run_behavioral_check(websocket, profile, " ".join(full_transcript), state)
+                )
             else:
                 score = conv_state.score
                 evidence = conv_state.evidence
-                
+
             await websocket.send_json({
                 "score": score,
                 "transcript": " ".join(full_transcript),
@@ -401,16 +498,19 @@ async def websocket_test_endpoint(websocket: WebSocket):
 
 
 @app.websocket("/api/ws/call-stream")
-async def websocket_call_stream(websocket: WebSocket):
+async def websocket_call_stream(websocket: WebSocket, profile_id: Optional[int] = None):
     await websocket.accept()
     if vosk_model is None:
         await websocket.send_json({"error": "Vosk model not loaded on server."})
         await websocket.close()
         return
-        
+
     rec = KaldiRecognizer(vosk_model, 16000)
     conv_state = ConvState()
-    
+    profile = get_behavioral_profile(profile_id) if profile_id else None
+    state = {"escalated": False}
+    full_transcript_parts: list[str] = []
+
     try:
         while True:
             # Receive binary Int16 PCM chunks
@@ -420,12 +520,18 @@ async def websocket_call_stream(websocket: WebSocket):
                 text = res.get("text", "")
                 if text:
                     score, evidence = conv_state.update(text)
+                    full_transcript_parts.append(text)
                     await websocket.send_json({
                         "score": score,
                         "transcript": text,
                         "evidence": evidence,
                         "is_final": True
                     })
+                    asyncio.create_task(
+                        run_behavioral_check(
+                            websocket, profile, " ".join(full_transcript_parts), state
+                        )
+                    )
             else:
                 res = json.loads(rec.PartialResult())
                 partial_text = res.get("partial", "")
@@ -434,7 +540,7 @@ async def websocket_call_stream(websocket: WebSocket):
                     temp_state.score = conv_state.score
                     temp_state.hits = conv_state.hits.copy()
                     temp_state.evidence = list(conv_state.evidence)
-                    
+
                     score, evidence = temp_state.update(partial_text)
                     await websocket.send_json({
                         "score": score,

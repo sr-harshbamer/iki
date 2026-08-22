@@ -24,6 +24,28 @@ from .schemas import AnalysisResult, RiskLevel
 ESCALATION_LEVELS: Set[RiskLevel] = {RiskLevel.LIKELY_SCAM, RiskLevel.HIGH_RISK}
 
 WEBHOOK_URL = os.environ.get("TRUSTED_CONTACT_WEBHOOK_URL", "")
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+
+
+def send_telegram_alert(text: str) -> bool:
+    """Best-effort push to a Telegram "Guardian" contact via the Bot API --
+    used by the live call monitor's critical-intervention path. Returns
+    True only if Telegram actually accepted the message; False (never an
+    exception) when unconfigured or unreachable, so a missing/failed alert
+    never blocks the protective action itself from taking effect."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return False
+    try:
+        resp = httpx.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            json={"chat_id": TELEGRAM_CHAT_ID, "text": text},
+            timeout=5.0,
+        )
+        resp.raise_for_status()
+        return True
+    except httpx.HTTPError:
+        return False
 
 
 def should_escalate(result: AnalysisResult) -> bool:

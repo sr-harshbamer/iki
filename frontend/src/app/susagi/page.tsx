@@ -1,25 +1,38 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { 
-  Shield, 
-  ShieldAlert, 
-  Mic, 
-  MicOff, 
-  Lock, 
-  Play, 
-  AlertTriangle, 
-  Activity, 
-  RefreshCw,
+import {
+  Shield,
+  ShieldAlert,
+  Mic,
+  MicOff,
+  Lock,
+  Play,
+  AlertTriangle,
+  Activity,
   Bell,
-  Trash2
+  Trash2,
+  UserCheck,
+  Sparkles,
+  Plus,
 } from "lucide-react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const WS_BASE = API_BASE.replace(/^http/, "ws");
 
 interface LogItem {
   id: string;
   time: string;
   why: string;
   score: number;
+}
+
+interface BehavioralProfile {
+  id: number;
+  name: string;
+  relationship_role: string;
+  expected_style: string;
+  never_asks_for: string[];
 }
 
 export default function SuSagiPage() {
@@ -33,7 +46,65 @@ export default function SuSagiPage() {
   // Protective Freeze State
   const [freezeCountdown, setFreezeCountdown] = useState(10);
   const [isFrozen, setIsFrozen] = useState(false);
-  
+
+  // Behavioral Impersonation Engine (Tier 2) state
+  const [profiles, setProfiles] = useState<BehavioralProfile[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const [behavioralScore, setBehavioralScore] = useState<number | null>(null);
+  const [behavioralReason, setBehavioralReason] = useState<string | null>(null);
+  const [guardianNotified, setGuardianNotified] = useState<boolean | null>(null);
+  const [showNewProfile, setShowNewProfile] = useState(false);
+  const [newProfile, setNewProfile] = useState({
+    name: "", relationship_role: "", expected_style: "", never_asks_for: "",
+  });
+  const [creatingProfile, setCreatingProfile] = useState(false);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/behavioral-profiles`)
+      .then((r) => r.json())
+      .then((list: BehavioralProfile[]) => {
+        setProfiles(list);
+        if (list.length > 0) setSelectedProfileId((prev) => prev ?? list[0].id);
+      })
+      .catch(() => {});
+  }, []);
+
+  const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null;
+
+  const createProfile = async () => {
+    const never_asks_for = newProfile.never_asks_for
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!newProfile.name.trim() || !newProfile.relationship_role.trim() || never_asks_for.length === 0) {
+      alert("Name, relationship, and at least one \"never asks for\" item are required.");
+      return;
+    }
+    setCreatingProfile(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/behavioral-profiles`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newProfile.name.trim(),
+          relationship_role: newProfile.relationship_role.trim(),
+          expected_style: newProfile.expected_style.trim() || "No particular pattern noted yet.",
+          never_asks_for,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create profile");
+      const created: BehavioralProfile = await res.json();
+      setProfiles((prev) => [...prev, created]);
+      setSelectedProfileId(created.id);
+      setShowNewProfile(false);
+      setNewProfile({ name: "", relationship_role: "", expected_style: "", never_asks_for: "" });
+    } catch {
+      alert("Couldn't save that profile. Please try again.");
+    } finally {
+      setCreatingProfile(false);
+    }
+  };
+
   const wsRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -98,12 +169,13 @@ export default function SuSagiPage() {
   // Connect to WebSocket (Mock or Real)
   const connectWebSocket = (isMockMode: boolean) => {
     setWsStatus("connecting");
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    // Proxies /api/* to localhost:8000. So WS also connects to localhost:8000
-    const wsUrl = isMockMode 
-      ? `${protocol}//${host.replace("3000", "8000")}/api/ws/call-stream-test`
-      : `${protocol}//${host.replace("3000", "8000")}/api/ws/call-stream`;
+    const qs = selectedProfileId ? `?profile_id=${selectedProfileId}` : "";
+    // Derived from NEXT_PUBLIC_API_URL, same as every other WS/fetch call in
+    // the app (see useLiveGuard.ts) -- a hardcoded "3000"->"8000" swap here
+    // broke the moment the backend ran on any other port or behind a tunnel.
+    const wsUrl = isMockMode
+      ? `${WS_BASE}/api/ws/call-stream-test${qs}`
+      : `${WS_BASE}/api/ws/call-stream${qs}`;
 
     if (wsRef.current) {
       wsRef.current.close();
@@ -121,6 +193,17 @@ export default function SuSagiPage() {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
+        if (data.type === "behavioral_update") {
+          setBehavioralScore(data.behavioral_score);
+          setBehavioralReason(data.reason);
+          return;
+        }
+        if (data.type === "escalation") {
+          setGuardianNotified(!!data.notified);
+          return;
+        }
+
         if (data.score !== undefined) {
           setScore(data.score);
         }
@@ -166,6 +249,9 @@ export default function SuSagiPage() {
     setScore(0);
     setEvidenceLog([]);
     setTranscript("Monitoring stopped.");
+    setBehavioralScore(null);
+    setBehavioralReason(null);
+    setGuardianNotified(null);
   };
 
   // Toggle Live Microphones
@@ -246,6 +332,9 @@ export default function SuSagiPage() {
     setIsFrozen(false);
     setFreezeCountdown(10);
     setTranscript("System reset. Awaiting input...");
+    setBehavioralScore(null);
+    setBehavioralReason(null);
+    setGuardianNotified(null);
   };
 
   return (
@@ -323,7 +412,84 @@ export default function SuSagiPage() {
           
           {/* Left Controls & Risk Bar */}
           <div className="md:col-span-1 space-y-6">
-            
+
+            {/* Behavioral Profile picker -- who is this call supposed to be? */}
+            <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5 space-y-3">
+              <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-cyan-400" /> Who is calling?
+              </h2>
+              <p className="text-xs text-ink-500 leading-relaxed">
+                Tier 2 checks whether this call actually sounds like the person it claims to be.
+              </p>
+              <select
+                value={selectedProfileId ?? ""}
+                onChange={(e) => setSelectedProfileId(Number(e.target.value))}
+                disabled={isScanning}
+                className="w-full rounded-xl bg-ink-950 border border-ink-800 px-3 py-2.5 text-sm text-ink-100 disabled:opacity-50"
+              >
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.relationship_role})</option>
+                ))}
+              </select>
+              {selectedProfile && (
+                <p className="text-[11px] text-ink-500 leading-relaxed">
+                  Never asks for: {selectedProfile.never_asks_for.join(", ")}
+                </p>
+              )}
+
+              {!showNewProfile ? (
+                <button
+                  onClick={() => setShowNewProfile(true)}
+                  disabled={isScanning}
+                  className="w-full py-2 rounded-lg border border-dashed border-ink-700 text-ink-400 hover:text-cyan-400 hover:border-cyan-800 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add a trusted contact
+                </button>
+              ) : (
+                <div className="space-y-2 pt-1 border-t border-ink-800">
+                  <input
+                    placeholder="Name (e.g. Priya)"
+                    value={newProfile.name}
+                    onChange={(e) => setNewProfile((p) => ({ ...p, name: e.target.value }))}
+                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                  />
+                  <input
+                    placeholder="Relationship (e.g. Sister)"
+                    value={newProfile.relationship_role}
+                    onChange={(e) => setNewProfile((p) => ({ ...p, relationship_role: e.target.value }))}
+                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                  />
+                  <input
+                    placeholder="Normally sounds like... (optional)"
+                    value={newProfile.expected_style}
+                    onChange={(e) => setNewProfile((p) => ({ ...p, expected_style: e.target.value }))}
+                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                  />
+                  <input
+                    placeholder="Would never ask for (comma-separated)"
+                    value={newProfile.never_asks_for}
+                    onChange={(e) => setNewProfile((p) => ({ ...p, never_asks_for: e.target.value }))}
+                    className="w-full rounded-lg bg-ink-950 border border-ink-800 px-3 py-2 text-xs text-ink-100 placeholder:text-ink-600"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={createProfile}
+                      disabled={creatingProfile}
+                      className="flex-1 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold disabled:opacity-50"
+                    >
+                      {creatingProfile ? "Saving..." : "Save contact"}
+                    </button>
+                    <button
+                      onClick={() => setShowNewProfile(false)}
+                      className="px-3 py-1.5 rounded-lg border border-ink-700 text-ink-400 text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Core Controls */}
             <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-5 space-y-4">
               <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider">Console Controls</h2>
@@ -433,6 +599,41 @@ export default function SuSagiPage() {
               </div>
             </div>
 
+            {/* Behavioral Match -- Tier 2's cross-reference against the
+                selected contact's baseline. Separate from the lexicon-based
+                Live Risk Index on purpose: this is answering a different
+                question ("does this sound like them?") using contextual
+                reasoning, not keyword hits. */}
+            {isScanning && selectedProfile && (
+              <div
+                className={`rounded-2xl border p-6 space-y-3 transition-colors ${
+                  behavioralScore !== null && behavioralScore >= 60
+                    ? "border-red-800 bg-red-950/20"
+                    : "border-ink-800 bg-ink-900/40"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-cyan-400" /> Behavioral Match vs. {selectedProfile.name}
+                  </h2>
+                  {behavioralScore !== null && (
+                    <span className={`text-lg font-extrabold tabular-nums ${
+                      behavioralScore >= 60 ? "text-red-400" : "text-emerald-400"
+                    }`}>
+                      {behavioralScore}%
+                    </span>
+                  )}
+                </div>
+                {behavioralReason ? (
+                  <p className="text-sm text-ink-200 leading-relaxed">{behavioralReason}</p>
+                ) : (
+                  <p className="text-sm text-ink-500">
+                    Waiting for enough of the call to compare against {selectedProfile.name}&apos;s baseline...
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Evidence Feed Timeline */}
             <div className="rounded-2xl border border-ink-800 bg-ink-900/40 p-6 space-y-4">
               <h2 className="text-sm font-bold text-ink-300 uppercase tracking-wider">Scam Indicators & Evidence Log</h2>
@@ -501,8 +702,13 @@ export default function SuSagiPage() {
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                   <p className="flex items-center gap-1.5">
-                    <Bell className="h-3 w-3 text-red-400" /> 
-                    <strong>Alert Sent</strong>: Trusted Contact (Guardian) Notified
+                    <Bell className="h-3 w-3 text-red-400" />
+                    <strong>Guardian Alert</strong>:{" "}
+                    {guardianNotified === true
+                      ? "Trusted contact notified via Telegram"
+                      : guardianNotified === false
+                      ? "Logged (no Guardian contact configured)"
+                      : "Pending..."}
                   </p>
                 </div>
               </div>

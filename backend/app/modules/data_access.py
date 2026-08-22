@@ -61,7 +61,17 @@ def init_db() -> None:
             result_json TEXT NOT NULL,
             created_at TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS behavioral_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            relationship_role TEXT NOT NULL,
+            expected_style TEXT NOT NULL,
+            never_asks_for TEXT NOT NULL,   -- JSON list of red-flag strings
+            created_at TEXT NOT NULL
+        );
         """)
+    _seed_default_behavioral_profiles()
 
 
 @contextmanager
@@ -215,6 +225,29 @@ def log_escalation(content_preview: str, result: AnalysisResult, notified_webhoo
         )
 
 
+def log_voice_escalation(preview: str, risk_level: str, score: int, notified: bool) -> None:
+    """Same escalations table as log_escalation, for the live call monitor --
+    which has a score and a transcript but no full AnalysisResult (there are
+    no discrete `Signal`s in a voice call, just a rolling score), so this
+    takes the handful of fields that actually apply instead of forcing a
+    shape that doesn't fit."""
+    with _conn() as cx:
+        cx.execute(
+            """INSERT INTO escalations
+               (mode, risk_level, risk_score, threat_category, preview, notified_webhook, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                "voice_call",
+                risk_level,
+                score,
+                "Impersonation",
+                preview[:240],
+                1 if notified else 0,
+                datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            ),
+        )
+
+
 def get_ai_cache(cache_key: str) -> Optional[str]:
     """Return the cached JSON result for this key, or None on a miss."""
     with _conn() as cx:
@@ -244,3 +277,104 @@ def recent_escalations(limit: int = 20) -> List[dict]:
             (limit,),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+# ── Behavioral profiles (Behavioral Impersonation Engine) ──────────────────
+#
+# A lightweight "who does this contact normally sound like" matrix per
+# trusted contact, used to cross-reference a live call transcript against
+# the person the caller claims to be -- see behavioral_analysis.py. Three
+# presets are seeded on first run so the feature is demoable with zero
+# setup; anyone can add their own via POST /api/behavioral-profiles.
+_DEFAULT_BEHAVIORAL_PROFILES = [
+    {
+        "name": "Dad",
+        "relationship_role": "Father",
+        "expected_style": "Warm, casual, talks about family and daily routine. Never in a rush.",
+        "never_asks_for": [
+            "gift cards", "UPI PIN", "OTP", "urgent untraceable money transfer",
+        ],
+    },
+    {
+        "name": "My Manager",
+        "relationship_role": "Direct Manager",
+        "expected_style": "Professional, brief, talks about deadlines and work items over official channels.",
+        "never_asks_for": [
+            "gift cards", "personal passwords", "urgent wire transfer", "your bank OTP",
+        ],
+    },
+    {
+        "name": "Bank Officer",
+        "relationship_role": "Bank Officer",
+        "expected_style": "Formal, never asks you to act within minutes, directs you to visit a branch for anything sensitive.",
+        "never_asks_for": [
+            "OTP", "full card number", "PIN", "remote screen-sharing access",
+        ],
+    },
+]
+
+
+def _seed_default_behavioral_profiles() -> None:
+    with _conn() as cx:
+        count = cx.execute("SELECT COUNT(*) AS c FROM behavioral_profiles").fetchone()["c"]
+        if count > 0:
+            return
+        now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        for p in _DEFAULT_BEHAVIORAL_PROFILES:
+            cx.execute(
+                """INSERT INTO behavioral_profiles
+                   (name, relationship_role, expected_style, never_asks_for, created_at)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (p["name"], p["relationship_role"], p["expected_style"],
+                 json.dumps(p["never_asks_for"]), now),
+            )
+
+
+def list_behavioral_profiles() -> List[dict]:
+    with _conn() as cx:
+        rows = cx.execute(
+            "SELECT id, name, relationship_role, expected_style, never_asks_for, created_at "
+            "FROM behavioral_profiles ORDER BY id ASC"
+        ).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        d["never_asks_for"] = json.loads(d["never_asks_for"])
+        out.append(d)
+    return out
+
+
+def get_behavioral_profile(profile_id: int) -> Optional[dict]:
+    with _conn() as cx:
+        row = cx.execute(
+            "SELECT id, name, relationship_role, expected_style, never_asks_for, created_at "
+            "FROM behavioral_profiles WHERE id = ?",
+            (profile_id,),
+        ).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["never_asks_for"] = json.loads(d["never_asks_for"])
+    return d
+
+
+def create_behavioral_profile(
+    name: str, relationship_role: str, expected_style: str, never_asks_for: List[str]
+) -> dict:
+    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    with _conn() as cx:
+        cursor = cx.execute(
+            """INSERT INTO behavioral_profiles
+               (name, relationship_role, expected_style, never_asks_for, created_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            (name, relationship_role, expected_style, json.dumps(never_asks_for), now),
+        )
+        new_id = cursor.lastrowid
+    return {
+        "id": new_id,
+        "name": name,
+        "relationship_role": relationship_role,
+        "expected_style": expected_style,
+        "never_asks_for": never_asks_for,
+        "created_at": now,
+    }
