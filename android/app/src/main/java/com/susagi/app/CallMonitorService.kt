@@ -24,6 +24,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -219,7 +220,13 @@ class CallMonitorService : Service() {
         record.startRecording()
         captureJob = scope.launch {
             val buffer = ByteArray(minBuf)
-            while (true) {
+            // `record.read()` is a plain blocking call, not a suspend function --
+            // it has no cancellation checkpoint of its own, so `while (true)` here
+            // would keep spinning forever after cancel() (calling read() on an
+            // already-released AudioRecord in a tight, CPU-pinning loop) since
+            // Kotlin cancellation is cooperative and only takes effect at a
+            // suspension point. `isActive` is that checkpoint.
+            while (isActive) {
                 val read = record.read(buffer, 0, buffer.size)
                 if (read > 0) {
                     webSocket?.send(ByteString.of(*buffer.copyOfRange(0, read)))
