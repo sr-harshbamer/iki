@@ -9,7 +9,11 @@ import {
   MessageSquareWarning,
 } from "lucide-react";
 
-const TABS: { id: AnalysisMode; label: string; icon: React.ReactNode; hint: string }[] = [
+/** The modes the Analyze page's tabs offer -- Voice Guard's clip analysis
+ * has its own dedicated flow on a different page, not a tab here. */
+export type AnalyzeMode = Exclude<AnalysisMode, "voice_clip">;
+
+const TABS: { id: AnalyzeMode; label: string; icon: React.ReactNode; hint: string }[] = [
   {
     id: "message",
     label: "Message Check",
@@ -40,8 +44,8 @@ export function ModeTabs({
   value,
   onChange,
 }: {
-  value: AnalysisMode;
-  onChange: (mode: AnalysisMode) => void;
+  value: AnalyzeMode;
+  onChange: (mode: AnalyzeMode) => void;
 }) {
   return (
     <div

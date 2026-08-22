@@ -3,13 +3,13 @@
 import { AnalyzingSequence } from "@/components/AnalyzingSequence";
 import { ContentInput } from "@/components/ContentInput";
 import { ImageInput } from "@/components/ImageInput";
-import { ModeTabs } from "@/components/ModeTabs";
+import { ModeTabs, type AnalyzeMode } from "@/components/ModeTabs";
 import { isQrScanSupported, QrCameraScanner } from "@/components/QrCameraScanner";
 import { QrStopScreen } from "@/components/QrStopScreen";
 import { RiskVerdictPanel } from "@/components/RiskVerdictPanel";
 import { analyze, analyzeImage, analyzeQr } from "@/lib/api";
 import { ATTACK_SCENARIOS, type AttackScenario } from "@/lib/scenarios";
-import type { AnalysisMode, AnalysisResult } from "@/lib/types";
+import type { AnalysisResult } from "@/lib/types";
 import { AlertCircle, Loader2, QrCode, Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -25,7 +25,7 @@ export default function AnalyzePage() {
 function AnalyzePageContent() {
   const searchParams = useSearchParams();
   const autoRanRef = useRef(false);
-  const [mode, setMode] = useState<AnalysisMode>("message");
+  const [mode, setMode] = useState<AnalyzeMode>("message");
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [senderId, setSenderId] = useState("");
@@ -349,7 +349,7 @@ function AnalyzePageContent() {
   );
 }
 
-function EmptyState({ mode }: { mode: AnalysisMode }) {
+function EmptyState({ mode }: { mode: AnalyzeMode }) {
   const label =
     mode === "message"
       ? "a suspicious message"

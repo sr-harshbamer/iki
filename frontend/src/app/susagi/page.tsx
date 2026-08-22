@@ -15,7 +15,12 @@ import {
   UserCheck,
   Sparkles,
   Plus,
+  FileAudio,
+  Loader2,
 } from "lucide-react";
+import { RiskVerdictPanel } from "@/components/RiskVerdictPanel";
+import { analyzeVoiceClip } from "@/lib/api";
+import type { AnalysisResult } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const WS_BASE = API_BASE.replace(/^http/, "ws");
@@ -109,6 +114,32 @@ export default function SuSagiPage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+
+  // ── Analyze a Recording (record/upload ONE clip, get ONE verdict) ──────
+  // Separate mic session from the live monitor above -- distinct refs so
+  // the two features never fight over the same MediaStream/AudioContext.
+  const recordStreamRef = useRef<MediaStream | null>(null);
+  const recordAudioContextRef = useRef<AudioContext | null>(null);
+  const recordProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const recordedChunksRef = useRef<Int16Array[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [isRecordingClip, setIsRecordingClip] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [voicePhase, setVoicePhase] = useState<"idle" | "transcribing" | "analyzing">("idle");
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [voiceResult, setVoiceResult] = useState<AnalysisResult | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  // Release the object URL when it's replaced or the page unmounts.
+  useEffect(() => {
+    return () => {
+      if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    };
+  }, [recordedUrl]);
 
   // Helper to downsample Float32 audio buffer to 16kHz
   const downsampleBuffer = (buffer: Float32Array, inputSampleRate: number, outputSampleRate: number) => {
@@ -335,6 +366,146 @@ export default function SuSagiPage() {
     setBehavioralScore(null);
     setBehavioralReason(null);
     setGuardianNotified(null);
+  };
+
+  // ── Analyze a Recording: record/upload handlers ─────────────────────────
+
+  // Wraps raw 16-bit PCM samples in a standard 44-byte WAV header -- matches
+  // exactly what backend/app/modules/voice_transcription.py expects
+  // (16kHz, mono, 16-bit), so there's no server-side transcoding to build.
+  const encodeWav = (samples: Int16Array, sampleRate = 16000): Blob => {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    const writeString = (offset: number, str: string) => {
+      for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    };
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, "data");
+    view.setUint32(40, samples.length * 2, true);
+    for (let i = 0; i < samples.length; i++) {
+      view.setInt16(44 + i * 2, samples[i], true);
+    }
+    return new Blob([view], { type: "audio/wav" });
+  };
+
+  const startRecordingClip = async () => {
+    setVoiceError(null);
+    setVoiceResult(null);
+    setUploadedFile(null);
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    setRecordedUrl(null);
+    setRecordedBlob(null);
+    recordedChunksRef.current = [];
+    setRecordSeconds(0);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      recordStreamRef.current = stream;
+
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const audioContext = new AudioContextClass();
+      recordAudioContextRef.current = audioContext;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      recordProcessorRef.current = processor;
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+
+      const inputSampleRate = audioContext.sampleRate;
+      processor.onaudioprocess = (event) => {
+        const inputData = event.inputBuffer.getChannelData(0);
+        const downsampled = downsampleBuffer(inputData, inputSampleRate, 16000);
+        recordedChunksRef.current.push(new Int16Array(floatTo16BitPCM(downsampled)));
+      };
+
+      setIsRecordingClip(true);
+      recordTimerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      setVoiceError("Microphone access is required to record a clip.");
+    }
+  };
+
+  const stopRecordingClip = () => {
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    recordProcessorRef.current?.disconnect();
+    recordProcessorRef.current = null;
+    recordStreamRef.current?.getTracks().forEach((t) => t.stop());
+    recordStreamRef.current = null;
+    recordAudioContextRef.current?.close();
+    recordAudioContextRef.current = null;
+    setIsRecordingClip(false);
+
+    const totalLength = recordedChunksRef.current.reduce((acc, c) => acc + c.length, 0);
+    if (totalLength === 0) {
+      setVoiceError("No audio was captured -- please try recording again.");
+      return;
+    }
+    const merged = new Int16Array(totalLength);
+    let offset = 0;
+    for (const chunk of recordedChunksRef.current) {
+      merged.set(chunk, offset);
+      offset += chunk.length;
+    }
+    const blob = encodeWav(merged, 16000);
+    setRecordedBlob(blob);
+    setRecordedUrl(URL.createObjectURL(blob));
+  };
+
+  const handleUploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setVoiceError(null);
+    setVoiceResult(null);
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    setRecordedBlob(null);
+    setRecordedUrl(null);
+    if (!file.type.includes("wav") && !file.name.toLowerCase().endsWith(".wav")) {
+      setVoiceError("Please upload a 16kHz mono WAV file.");
+      return;
+    }
+    setUploadedFile(file);
+  };
+
+  const handleAnalyzeRecording = async () => {
+    const fileToSend: Blob | null = uploadedFile ?? recordedBlob;
+    if (!fileToSend) {
+      setVoiceError("Record or upload a clip first.");
+      return;
+    }
+    setVoiceError(null);
+    setVoiceResult(null);
+    setVoiceTranscript("");
+    setVoicePhase("transcribing");
+    // One request does transcription + analysis server-side in sequence;
+    // this timer just narrates roughly where things are, since there's no
+    // streaming channel here to report real phase boundaries.
+    const phaseTimer = setTimeout(() => setVoicePhase("analyzing"), 2000);
+    try {
+      const res = await analyzeVoiceClip(fileToSend);
+      setVoiceTranscript(res.transcript);
+      setVoiceResult(res.result);
+    } catch (err) {
+      setVoiceError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      clearTimeout(phaseTimer);
+      setVoicePhase("idle");
+    }
   };
 
   return (
@@ -673,6 +844,102 @@ export default function SuSagiPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ── Analyze a Recording ──────────────────────────────────────
+            Distinct from the live monitor above: record or upload ONE
+            finished clip, get a transcript plus the same full risk verdict
+            Analyze's Message Check produces -- reuses RiskVerdictPanel
+            as-is, same as the Analyze page. */}
+        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">
+          <div>
+            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+              <FileAudio className="h-4 w-4 text-cyan-400" /> Analyze a Recording
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Record or upload a single clip to get a transcript and a full risk verdict — separate from the live monitor above.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {!isRecordingClip ? (
+              <button
+                type="button"
+                onClick={startRecordingClip}
+                disabled={isScanning}
+                className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold flex items-center gap-2 border border-slate-700 disabled:opacity-40 transition-all active:scale-[0.98]"
+              >
+                <Mic className="h-4 w-4" /> Record a clip
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={stopRecordingClip}
+                className="py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold flex items-center gap-2 transition-all active:scale-[0.98]"
+              >
+                <MicOff className="h-4 w-4" /> Stop ({recordSeconds}s)
+              </button>
+            )}
+
+            <label className="py-2.5 px-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-slate-100 hover:bg-slate-900 font-medium text-sm cursor-pointer transition-all">
+              Upload a WAV file
+              <input
+                type="file"
+                accept="audio/wav,.wav"
+                className="hidden"
+                onChange={handleUploadFile}
+                disabled={isRecordingClip}
+              />
+            </label>
+          </div>
+
+          {(recordedUrl || uploadedFile) && (
+            <div className="rounded-xl bg-slate-950 border border-slate-800 p-3 space-y-2">
+              <p className="text-xs text-slate-400">
+                {uploadedFile ? `Uploaded: ${uploadedFile.name}` : "Recorded clip ready"}
+              </p>
+              {recordedUrl && <audio controls src={recordedUrl} className="w-full h-8" />}
+              <button
+                type="button"
+                onClick={handleAnalyzeRecording}
+                disabled={voicePhase !== "idle"}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.98]"
+              >
+                {voicePhase === "transcribing" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Transcribing audio...
+                  </>
+                ) : voicePhase === "analyzing" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Analyzing voice...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" /> Analyze Recording
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {voiceError && (
+            <div className="flex items-start gap-2 rounded-xl border border-red-900 bg-red-950/30 p-3 text-sm text-red-300">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>{voiceError}</span>
+            </div>
+          )}
+
+          {voiceResult && (
+            <div className="space-y-3 pt-2 border-t border-slate-800">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Transcript</h3>
+                <div className="rounded-xl bg-slate-950 border border-slate-900/60 p-3 text-sm text-slate-200 font-mono leading-relaxed">
+                  {voiceTranscript}
+                </div>
+              </div>
+              <RiskVerdictPanel key={voiceResult.analyzed_at} result={voiceResult} content={voiceTranscript} />
+            </div>
+          )}
         </div>
 
         {/* Dynamic Action Freeze Modal Overlay */}

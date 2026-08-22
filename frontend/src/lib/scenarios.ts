@@ -1,11 +1,11 @@
-import type { AnalysisMode } from "./types";
+import type { AnalyzeMode } from "@/components/ModeTabs";
 
 export interface AttackScenario {
   id: string;
   label: string;
   category: string;
   description: string;
-  mode: AnalysisMode;
+  mode: AnalyzeMode;
   content: string;
   /** Tags this scenario against a pre-seeded sender history, so anomaly
    * detection can fire for real instead of scoring the message in isolation. */

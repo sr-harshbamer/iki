@@ -4,8 +4,9 @@ import { cn } from "@/lib/cn";
 import type { AnalysisMode } from "@/lib/types";
 import { Sparkles } from "lucide-react";
 
-/** Modes handled by this text-based input (Image Check uses ImageInput instead). */
-type TextMode = Exclude<AnalysisMode, "image">;
+/** Modes handled by this text-based input (Image Check uses ImageInput
+ * instead; Voice Guard's clip analysis has its own dedicated UI). */
+type TextMode = Exclude<AnalysisMode, "image" | "voice_clip">;
 
 /**
  * Per-mode sample inputs. These are short, realistic, and cover the red flags
