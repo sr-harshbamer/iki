@@ -45,3 +45,4 @@ android/build/
 android/.idea/
 android/*.iml
 apk_download/
+frontend/tsconfig.tsbuildinfo
