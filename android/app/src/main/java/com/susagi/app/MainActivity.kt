@@ -15,7 +15,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -100,6 +102,7 @@ fun VoiceGuardScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(InkBg)
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) {
         Text("SuSagi Voice Guard", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
