@@ -23,7 +23,7 @@ from typing import List, Optional
 from dotenv import load_dotenv
 
 # Must run before any .modules import below -- several of them read API keys
-# (GEMINI_API_KEY, GROQ_API_KEY, ...) as module-level constants at import
+# (ANTHROPIC_API_KEY, ...) as module-level constants at import
 # time via os.environ.get(...), so loading .env any later leaves those
 # modules permanently holding an empty key for the rest of the process,
 # even though the .env file is right there. Every AI-powered layer
@@ -44,7 +44,7 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from vosk import Model, KaldiRecognizer
+from vosk import KaldiRecognizer
 
 from .modules.behavioral_analysis import analyze_behavioral_anomaly
 from .modules.data_access import (
@@ -70,7 +70,7 @@ from .modules.escalation_engine import (
 from .modules.link_analysis import analyze_link
 from .modules.llm_analysis import analyze_with_llm
 from .modules.message_analysis import analyze_message
-from .modules.pipeline import _build_result, run_analysis, run_image_analysis
+from .modules.pipeline import _build_result, run_analysis, run_image_analysis, run_voice_analysis
 from .modules.risk_scoring import score_signals, score_to_level
 from .modules.schemas import (
     AnalysisMode,
@@ -84,21 +84,18 @@ from .modules.schemas import (
     Signal,
     Severity,
     ThreatCategory,
+    VoiceAnalysisResponse,
 )
 from .modules.scam_scorer import ConvState
 from .modules.upi_analysis import analyze_upi_payload
-
-# Load Vosk model globally
-try:
-    vosk_model = Model("model")
-    print("[OK] Vosk model loaded successfully!")
-except Exception as e:
-    print(f"[ERROR] Error loading Vosk model: {e}")
-    vosk_model = None
+from .modules.voice_transcription import transcribe_wav_bytes, vosk_model
 
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
-
 ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
+
+# ~15MB caps a WAV recording at roughly 7-8 minutes (16kHz, mono, 16-bit).
+MAX_AUDIO_BYTES = 15 * 1024 * 1024
+ALLOWED_AUDIO_TYPES = {"audio/wav", "audio/x-wav", "audio/wave"}
 
 
 app = FastAPI(
@@ -184,6 +181,53 @@ def analyze_image(
         background_tasks.add_task(handle_escalation, preview, result)
 
     return ImageAnalysisResponse(result=result, extracted_text=extracted_text)
+
+
+@app.post("/api/analyze-voice", response_model=VoiceAnalysisResponse)
+def analyze_voice(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    sender_id: Optional[str] = Form(None),
+) -> VoiceAnalysisResponse:
+    """
+    A finished voice clip (recorded in the browser or uploaded) -- distinct
+    from the live call monitor's /api/ws/call-stream, which reacts to audio
+    as it arrives. This is the "one clip in, one verdict out" counterpart:
+    transcribe once, then run the exact same depth of analysis Analyze's
+    Message Check gets (see pipeline.run_voice_analysis).
+    """
+    if file.content_type not in ALLOWED_AUDIO_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported audio type. Upload a 16kHz mono WAV recording.",
+        )
+
+    audio_bytes = file.file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Empty file.")
+    if len(audio_bytes) > MAX_AUDIO_BYTES:
+        raise HTTPException(status_code=400, detail="Recording too large (15MB max, ~7-8 minutes).")
+
+    transcript = transcribe_wav_bytes(audio_bytes)
+    if not transcript:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Couldn't transcribe this recording. Make sure it's a clear "
+                "16kHz mono WAV file with audible speech."
+            ),
+        )
+
+    sender_profile = get_sender_profile(sender_id) if sender_id else None
+    result = run_voice_analysis(transcript, sender_profile)
+
+    save_analysis(transcript, result)
+    if sender_id:
+        update_sender_profile(sender_id, result)
+    if should_escalate(result):
+        background_tasks.add_task(handle_escalation, transcript, result)
+
+    return VoiceAnalysisResponse(result=result, transcript=transcript)
 
 
 @app.post("/api/analyze-qr", response_model=ImageAnalysisResponse)

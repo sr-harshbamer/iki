@@ -18,6 +18,7 @@ class AnalysisMode(str, Enum):
     LINK = "link"
     JOB_OFFER = "job_offer"
     IMAGE = "image"
+    VOICE_CLIP = "voice_clip"
 
 
 class RiskLevel(str, Enum):
@@ -161,3 +162,12 @@ class ImageAnalysisResponse(BaseModel):
     frontend to fall back on when displaying the analyzed content."""
     result: AnalysisResult
     extracted_text: str
+
+
+class VoiceAnalysisResponse(BaseModel):
+    """Response for /api/analyze-voice. Includes the Vosk-transcribed text
+    alongside the usual result, for the same reason as ImageAnalysisResponse
+    -- there's no original text input to fall back on when displaying what
+    was actually analyzed."""
+    result: AnalysisResult
+    transcript: str

@@ -17,7 +17,7 @@ from .explanation_engine import (
     build_why_flagged,
     build_why_not_proceed,
 )
-from .image_analysis import GEMINI_API_KEY, analyze_image_with_llm, decode_qr_signals
+from .image_analysis import ANTHROPIC_API_KEY, analyze_image_with_llm, decode_qr_signals
 from .job_offer_analysis import analyze_job_offer
 from .link_analysis import analyze_link
 from .llm_analysis import analyze_with_llm
@@ -55,6 +55,24 @@ def run_analysis(req: AnalysisRequest, sender_profile: Optional[dict] = None) ->
     return _build_result(req.mode, category, signals, sender_profile, forecast=forecast)
 
 
+def run_voice_analysis(
+    transcript: str,
+    sender_profile: Optional[dict] = None,
+) -> AnalysisResult:
+    """
+    A finished voice clip (recorded or uploaded) gets the exact same depth
+    of analysis as a pasted message -- unlike the live call monitor's
+    lightweight ConvState lexicon scorer, which is tuned for instant
+    reaction to one line at a time. Here the full transcript is already
+    available up front, so it goes through the same rule-based +
+    semantic-LLM pipeline as Analyze's Message Check.
+    """
+    signals, category = analyze_message(transcript)
+    llm_signals, forecast = analyze_with_llm(transcript, AnalysisMode.MESSAGE)
+    signals = signals + llm_signals
+    return _build_result(AnalysisMode.VOICE_CLIP, category, signals, sender_profile, forecast=forecast)
+
+
 def run_image_analysis(
     image_bytes: bytes,
     mime_type: str,
@@ -89,10 +107,10 @@ def run_image_analysis(
     signals = text_signals + visual_signals + qr_signals
 
     empty_reason = None
-    if not extracted_text and not qr_value and not GEMINI_API_KEY:
+    if not extracted_text and not qr_value and not ANTHROPIC_API_KEY:
         empty_reason = (
             "SuSagi could not read this image because no vision API key is "
-            "configured yet -- ask the site operator to set GEMINI_API_KEY."
+            "configured yet -- ask the site operator to set ANTHROPIC_API_KEY."
         )
 
     result = _build_result(

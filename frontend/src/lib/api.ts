@@ -6,6 +6,7 @@ import type {
   ImageAnalysisResponse,
   InsightsSummary,
   SenderLookupResult,
+  VoiceAnalysisResponse,
 } from "./types";
 
 // The Next.js rewrite in next.config.js proxies /api/* to the FastAPI backend.
@@ -48,6 +49,28 @@ export async function analyzeImage(
   if (senderId?.trim()) form.append("sender_id", senderId.trim());
 
   const res = await fetch(`${DIRECT_API_BASE}/api/analyze-image`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`Analysis failed: ${text}`);
+  }
+  return res.json();
+}
+
+export async function analyzeVoiceClip(
+  file: Blob,
+  senderId?: string,
+): Promise<VoiceAnalysisResponse> {
+  const form = new FormData();
+  form.append("file", file, "recording.wav");
+  if (senderId?.trim()) form.append("sender_id", senderId.trim());
+
+  // Same reasoning as analyzeImage() -- transcription + LLM analysis can
+  // run long, so this goes straight to the backend instead of through the
+  // Next.js dev-server rewrite proxy, which times out well before that.
+  const res = await fetch(`${DIRECT_API_BASE}/api/analyze-voice`, {
     method: "POST",
     body: form,
   });

@@ -1,4 +1,4 @@
-export type AnalysisMode = "message" | "link" | "job_offer" | "image";
+export type AnalysisMode = "message" | "link" | "job_offer" | "image" | "voice_clip";
 
 export type RiskLevel =
   | "Safe"
@@ -68,6 +68,11 @@ export interface AnalysisResult {
 export interface ImageAnalysisResponse {
   result: AnalysisResult;
   extracted_text: string;
+}
+
+export interface VoiceAnalysisResponse {
+  result: AnalysisResult;
+  transcript: string;
 }
 
 export interface InsightsSummary {
